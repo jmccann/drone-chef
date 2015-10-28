@@ -71,7 +71,7 @@ end
 # Chef URL based off Chef Server and Org
 #
 def chef_url
-  "#{build_args['server']}/#{build_args['org']}"
+  "#{build_args['server']}/organizations/#{build_args['org']}"
 end
 
 def key_path
