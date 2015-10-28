@@ -133,6 +133,7 @@ end
 ######
 verify_reqs
 write_key
+write_knife_rb
 if cookbook_uploaded?
   fatal "Cookbook #{cookbook.name} version #{cookbook.version} " \
         "already uploaded to #{chef_url}"
