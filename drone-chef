@@ -52,10 +52,10 @@ end
 def verify_reqs # rubocop:disable AbcSize
   puts 'Verifying required arguments'
   fail 'No build data found' if ARGV[1].nil?
-  fail 'Username required' if build_args['user'].nil?
-  fail 'Key required' if build_args['key'].nil?
-  fail 'Chef server URL required' if build_args['server'].nil?
-  fail 'Chef organization required' if build_args['org'].nil?
+  fail 'Username required' unless build_args.key? 'user'
+  fail 'Key required' unless build_args.key? 'key'
+  fail 'Chef server URL required' unless build_args.key? 'server'
+  fail 'Chef organization required' unless build_args.key? 'org'
 end
 
 #
