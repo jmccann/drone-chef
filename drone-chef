@@ -68,12 +68,16 @@ def cookbook_uploaded?
   system(*command)
 end
 
+def key_path
+  "#{workspace}/key.pem"
+end
+
 #
 # Write string encoded RSA key to a temporary file
 #
 def write_key
   puts 'Writing temp key'
-  File.open('key.pem', 'w') do |f|
+  File.open(key_path, 'w') do |f|
     f.write build_args['key']
   end
 end
@@ -92,7 +96,7 @@ def upload_cookbook # rubocop:disable AbcSize
   puts "Uploading cookbook #{cookbook.name}@#{cookbook.version}"
   command = ["knife cookbook upload #{cookbook.name}"]
   command << '-o ..' # cookbook directory path
-  command << "-u #{build_args['user']} -k key.pem" # User/key
+  command << "-u #{build_args['user']} -k #{key_path}" # User/key
   command << "-s #{chef_url}" # Chef server/org
   command << '--freeze' if freeze
   puts `#{command.join(' ')}`
