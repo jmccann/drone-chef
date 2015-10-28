@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'json'
+require 'pathname'
 require 'chef/cookbook/metadata'
 
 #
