@@ -26,6 +26,13 @@ def cookbook_name
   name.first.chomp.split.last.tr("'", '')
 end
 
+def cookbook_version
+  fail 'Cookbook metadata could not be found' if File.exist? 'metadata.rb'
+  version = File.read('metadata.rb').lines.grep(/^version[ \t]+/)
+  fail 'Could not determine cookbook version' if version.empty?
+  name.first.chomp.split.last.tr("'", '')
+end
+
 #
 # Wether or not to freeze the cookbook version during upload
 #
@@ -48,6 +55,16 @@ def verify_reqs # rubocop:disable AbcSize
 end
 
 #
+# Is cookbook already uploaded at given version?
+#
+def cookbook_uploaded?
+  command = ["knife cookbook show #{cookbook_name} #{cookbook_version}"]
+  command << "-u #{build_args['user']} -k key.pem" # User/key
+  command << "-s #{chef_url}" # Chef server/org
+  system(*command)
+end
+
+#
 # Write string encoded RSA key to a temporary file
 #
 def write_key
@@ -57,17 +74,31 @@ def write_key
 end
 
 #
+# Chef URL based off Chef Server and Org
+#
+def chef_url
+  "#{build_args['server']}/#{build_args['org']}"
+end
+
+#
 # Upload the cookbook
 #
 def upload_cookbook
   command = ["knife cookbook upload #{cookbook_name}"]
   command << '-o ..' # cookbook directory path
   command << "-u #{build_args['user']} -k key.pem" # User/key
-  command << "-s #{build_args['server']}/#{build_args['org']}" # Chef server/org
+  command << "-s #{chef_url}" # Chef server/org
   command << '--freeze' if freeze
   system(*command)
 end
 
+######
+# MAIN
+######
 verify_reqs
 write_key
+if cookbook_uploaded?
+  fatal "Cookbook #{cookbook_name} version #{cookbook_version} " \
+        "already uploaded to #{chef_url}"
+end
 upload_cookbook
