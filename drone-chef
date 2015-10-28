@@ -95,7 +95,7 @@ end
 def upload_cookbook # rubocop:disable AbcSize
   puts "Uploading cookbook #{cookbook.name}@#{cookbook.version}"
   command = ["knife cookbook upload #{cookbook.name}"]
-  command << '-o ..' # cookbook directory path
+  command << "-o #{Pathname.new(workspace).parent}" # cookbook directory path
   command << "-u #{build_args['user']} -k #{key_path}" # User/key
   command << "-s #{chef_url}" # Chef server/org
   command << '--freeze' if freeze
