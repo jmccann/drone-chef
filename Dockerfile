@@ -1,4 +1,4 @@
-# Docker image for the rsync plugin
+# Docker image for the chef plugin
 #
 #     docker build --rm=true -t jmccann/drone-chef .
 
