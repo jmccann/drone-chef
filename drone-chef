@@ -63,9 +63,15 @@ end
 #
 def cookbook_uploaded?
   command = ["knife cookbook show #{cookbook.name} #{cookbook.version}"]
-  command << "-u #{build_args['user']} -k key.pem" # User/key
-  command << "-s #{chef_url}" # Chef server/org
+  command << "-c #{knife_rb}"
   system(*command)
+end
+
+#
+# Chef URL based off Chef Server and Org
+#
+def chef_url
+  "#{build_args['server']}/#{build_args['org']}"
 end
 
 def key_path
@@ -83,10 +89,31 @@ def write_key
 end
 
 #
-# Chef URL based off Chef Server and Org
+# Knife.rb path
 #
-def chef_url
-  "#{build_args['server']}/#{build_args['org']}"
+def knife_rb
+  "#{workspace}/knife.rb"
+end
+
+#
+# SSL mode when when connecting to chef server
+#
+def ssl_verify_mode
+  return ':verify_peer' unless build_args.key? 'ssl_verify_mode'
+  build_args['ssl_verify_mode'] ? ':verify_peer' : ':verify_none'
+end
+
+#
+# Write knife.rb config
+#
+def write_knife_rb
+  File.open(knife_rb, 'w') do |f|
+    f.write "node_name '#{build_args['user']}'"
+    f.write "client_key '#{key_path}'"
+    f.write "chef_server_url '#{chef_url}'"
+    f.write "cookbook_path '#{Pathname.new(workspace).parent}'"
+    f.write "ssl_verify_mode #{ssl_verify_mode}"
+  end
 end
 
 #
@@ -95,12 +122,10 @@ end
 def upload_cookbook # rubocop:disable AbcSize
   puts "Uploading cookbook #{cookbook.name}@#{cookbook.version}"
   command = ["knife cookbook upload #{cookbook.name}"]
-  command << "-o #{Pathname.new(workspace).parent}" # cookbook directory path
-  command << "-u #{build_args['user']} -k #{key_path}" # User/key
-  command << "-s #{chef_url}" # Chef server/org
+  command << "-c #{knife_rb}"
   command << '--freeze' if freeze
   puts `#{command.join(' ')}`
-  fatal 'Failed to upload cookbook' unless $?.success?
+  fatal 'Failed to upload cookbook' unless $?.success? # rubocop:disable SpecialGlobalVars, LineLength
 end
 
 ######

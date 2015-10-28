@@ -6,6 +6,7 @@ The following parameters are used to configuration this plugin:
 * **server** - Chef server to connect to
 * **org** - Chef org to use on the Chef server
 * **freeze** - Wether or not to freeze the version
+* **ssl_verify_mode** - Enable/Disable SSL verify
 
 The following is a sample Docker configuration in your .drone.yml file:
 
@@ -17,4 +18,5 @@ deploy:
     server: https://chefserver.com
     org: my_org
     freeze: true
+    ssl_verify_mode: true
 ```
