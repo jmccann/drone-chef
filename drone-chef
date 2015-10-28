@@ -47,6 +47,7 @@ end
 # Verify required build arguments
 #
 def verify_reqs # rubocop:disable AbcSize
+  puts 'Verifying required arguments'
   fail 'No build data found' if ARGV[1].nil?
   fail 'Username required' if build_args['user'].nil?
   fail 'Key required' if build_args['key'].nil?
@@ -68,6 +69,7 @@ end
 # Write string encoded RSA key to a temporary file
 #
 def write_key
+  puts 'Writing temp key'
   File.open('key.pem', 'w') do |f|
     f.write build_args['key']
   end
@@ -84,6 +86,7 @@ end
 # Upload the cookbook
 #
 def upload_cookbook
+  puts 'Uploading cookbook'
   command = ["knife cookbook upload #{cookbook_name}"]
   command << '-o ..' # cookbook directory path
   command << "-u #{build_args['user']} -k key.pem" # User/key
