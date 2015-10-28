@@ -108,11 +108,11 @@ end
 #
 def write_knife_rb
   File.open(knife_rb, 'w') do |f|
-    f.write "node_name '#{build_args['user']}'"
-    f.write "client_key '#{key_path}'"
-    f.write "chef_server_url '#{chef_url}'"
-    f.write "cookbook_path '#{Pathname.new(workspace).parent}'"
-    f.write "ssl_verify_mode #{ssl_verify_mode}"
+    f.puts "node_name '#{build_args['user']}'"
+    f.puts "client_key '#{key_path}'"
+    f.puts "chef_server_url '#{chef_url}'"
+    f.puts "cookbook_path '#{Pathname.new(workspace).parent}'"
+    f.puts "ssl_verify_mode #{ssl_verify_mode}"
   end
 end
 
