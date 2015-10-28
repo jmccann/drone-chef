@@ -1,0 +1,73 @@
+#!/usr/bin/env ruby
+
+require 'json'
+
+#
+# Parse build data JSON string
+#
+def build_data
+  @build_data ||= JSON.parse ARGV[1]
+end
+
+#
+# Grab build args from build_data
+#
+def build_args
+  build_data['vargs']
+end
+
+#
+# Grab cookbook name from cookbook's metadata.rb
+#
+def cookbook_name
+  fail 'Cookbook metadata could not be found' if File.exist? 'metadata.rb'
+  name = File.read('metadata.rb').lines.grep(/^name[ \t]+/)
+  fail 'Could not determine cookbook name' if name.empty?
+  name.first.chomp.split.last.tr("'", '')
+end
+
+#
+# Wether or not to freeze the cookbook version during upload
+#
+def freeze
+  @freeze ||= begin
+    return true if build_args['freeze'].nil?
+    build_args['freeze']
+  end
+end
+
+#
+# Verify required build arguments
+#
+def verify_reqs # rubocop:disable AbcSize
+  fail 'No build data found' if ARGV[1].nil?
+  fail 'Username required' if build_args['user'].nil?
+  fail 'Key required' if build_args['key'].nil?
+  fail 'Chef server URL required' if build_args['server'].nil?
+  fail 'Chef organization required' if build_args['org'].nil?
+end
+
+#
+# Write string encoded RSA key to a temporary file
+#
+def write_key
+  File.new 'key.pem' do |f|
+    f.write build_args['key']
+  end
+end
+
+#
+# Upload the cookbook
+#
+def upload_cookbook
+  command = ["knife cookbook upload #{cookbook_name}"]
+  command << '-o ..' # cookbook directory path
+  command << "-u #{build_args['user']} -k key.pem" # User/key
+  command << "-s #{build_args['server']}/#{build_args['org']}" # Chef server/org
+  command << '--freeze' if freeze
+  system(*command)
+end
+
+verify_reqs
+write_key
+upload_cookbook
