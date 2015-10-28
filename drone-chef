@@ -34,7 +34,6 @@ def cookbook
     metadata.from_file("#{workspace}/metadata.rb")
     metadata
   end
-  # puts "#{metadata.name} #{metadata.version}"
 end
 
 #
