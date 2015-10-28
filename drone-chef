@@ -14,6 +14,7 @@ end
 # Path to project workspace
 #
 def workspace
+  puts build_data.inspect
   build_data['clone']['dir']
 end
 
