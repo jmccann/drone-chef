@@ -68,7 +68,7 @@ end
 # Write string encoded RSA key to a temporary file
 #
 def write_key
-  File.new 'key.pem' do |f|
+  File.open('key.pem', 'w') do |f|
     f.write build_args['key']
   end
 end
