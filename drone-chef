@@ -88,8 +88,8 @@ end
 #
 # Upload the cookbook
 #
-def upload_cookbook
-  puts 'Uploading cookbook'
+def upload_cookbook # rubocop:disable AbcSize
+  puts "Uploading cookbook #{cookbook.name}@#{cookbook.version}"
   command = ["knife cookbook upload #{cookbook.name}"]
   command << '-o ..' # cookbook directory path
   command << "-u #{build_args['user']} -k key.pem" # User/key
