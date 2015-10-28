@@ -100,7 +100,7 @@ def upload_cookbook # rubocop:disable AbcSize
   command << "-s #{chef_url}" # Chef server/org
   command << '--freeze' if freeze
   puts `#{command.join(' ')}`
-  $CHILD_STATUS.success?
+  fatal 'Failed to upload cookbook' unless $CHILD_STATUS.success?
 end
 
 ######
