@@ -1,12 +1,20 @@
 #!/usr/bin/env ruby
 
 require 'json'
+require 'chef/cookbook/metadata'
 
 #
 # Parse build data JSON string
 #
 def build_data
   @build_data ||= JSON.parse ARGV[1]
+end
+
+#
+# Path to project workspace
+#
+def workspace
+  build_data['clone']['dir']
 end
 
 #
@@ -17,20 +25,15 @@ def build_args
 end
 
 #
-# Grab cookbook name from cookbook's metadata.rb
+# Cookbook metadata
 #
-def cookbook_name
-  fail 'Cookbook metadata could not be found' if File.exist? 'metadata.rb'
-  name = File.read('metadata.rb').lines.grep(/^name[ \t]+/)
-  fail 'Could not determine cookbook name' if name.empty?
-  name.first.chomp.split.last.tr("'", '')
-end
-
-def cookbook_version
-  fail 'Cookbook metadata could not be found' if File.exist? 'metadata.rb'
-  version = File.read('metadata.rb').lines.grep(/^version[ \t]+/)
-  fail 'Could not determine cookbook version' if version.empty?
-  name.first.chomp.split.last.tr("'", '')
+def cookbook
+  @metadata ||= begin
+    metadata = Chef::Cookbook::Metadata.new
+    metadata.from_file("#{workspace}/metadata.rb")
+    metadata
+  end
+  # puts "#{metadata.name} #{metadata.version}"
 end
 
 #
@@ -59,7 +62,7 @@ end
 # Is cookbook already uploaded at given version?
 #
 def cookbook_uploaded?
-  command = ["knife cookbook show #{cookbook_name} #{cookbook_version}"]
+  command = ["knife cookbook show #{cookbook.name} #{cookbook.version}"]
   command << "-u #{build_args['user']} -k key.pem" # User/key
   command << "-s #{chef_url}" # Chef server/org
   system(*command)
@@ -87,7 +90,7 @@ end
 #
 def upload_cookbook
   puts 'Uploading cookbook'
-  command = ["knife cookbook upload #{cookbook_name}"]
+  command = ["knife cookbook upload #{cookbook.name}"]
   command << '-o ..' # cookbook directory path
   command << "-u #{build_args['user']} -k key.pem" # User/key
   command << "-s #{chef_url}" # Chef server/org
@@ -101,7 +104,7 @@ end
 verify_reqs
 write_key
 if cookbook_uploaded?
-  fatal "Cookbook #{cookbook_name} version #{cookbook_version} " \
+  fatal "Cookbook #{cookbook.name} version #{cookbook.version} " \
         "already uploaded to #{chef_url}"
 end
 upload_cookbook
