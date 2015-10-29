@@ -76,7 +76,7 @@ def chef_url
 end
 
 def key_path
-  "#{workspace}/key.pem"
+  '/tmp/drone/key.pem'
 end
 
 #
@@ -93,7 +93,7 @@ end
 # Knife.rb path
 #
 def knife_rb
-  "#{workspace}/knife.rb"
+  '/tmp/drone/knife.rb'
 end
 
 #
