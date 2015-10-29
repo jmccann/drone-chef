@@ -64,7 +64,7 @@ end
 def cookbook_uploaded?
   command = ["knife cookbook show #{cookbook.name} #{cookbook.version}"]
   command << "-c #{knife_rb}"
-  puts `#{command.join(' ')}`
+  `#{command.join(' ')}`
   $?.success? # rubocop:disable SpecialGlobalVars
 end
 
