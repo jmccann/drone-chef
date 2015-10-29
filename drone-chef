@@ -137,7 +137,8 @@ write_knife_rb
 puts "Checking if #{cookbook.name}@#{cookbook.version} " \
      "is already uploaded to #{chef_url}"
 if cookbook_uploaded?
-  fail "Cookbook #{cookbook.name} version #{cookbook.version} " \
-        "already uploaded to #{chef_url}"
+  puts "Cookbook #{cookbook.name} version #{cookbook.version} " \
+       "already uploaded to #{chef_url}"
+  exit
 end
 upload_cookbook
