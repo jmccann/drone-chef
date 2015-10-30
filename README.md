@@ -23,6 +23,7 @@ This will upload the cookbook to a supermarket server
 ```yaml
 deploy:
   chef:
+    image: jmccann/drone-chef
     user: userid
     key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
     server: https://mysupermarket.com
@@ -32,6 +33,7 @@ deploy:
 ```yaml
 deploy:
   chef:
+    image: jmccann/drone-chef
     user: userid
     key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
     server: https://chefserver.com
