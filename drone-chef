@@ -46,6 +46,10 @@ def freeze
   end
 end
 
+def verify_reqs_server
+  fail 'Chef organization required' unless build_args.key? 'org'
+end
+
 #
 # Verify required build arguments
 #
@@ -54,8 +58,8 @@ def verify_reqs # rubocop:disable AbcSize
   fail 'No build data found' if ARGV[1].nil?
   fail 'Username required' unless build_args.key? 'user'
   fail 'Key required' unless build_args.key? 'key'
-  fail 'Chef server URL required' unless build_args.key? 'server'
-  fail 'Chef organization required' unless build_args.key? 'org'
+  fail 'Server URL required' unless build_args.key? 'server'
+  verify_reqs_server if upload_type == 'server'
 end
 
 #
