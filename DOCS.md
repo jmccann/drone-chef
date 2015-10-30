@@ -1,22 +1,42 @@
 Use the chef plugin to deploy cookbooks to a Chef server.
-The following parameters are used to configuration this plugin:
 
+Global Parameters
+=================
+The following are global parameters used for configuration this plugin:
 * **user** - connects as this user
 * **key** - connects with this private key
 * **server** - Chef server to connect to
+* **type** - (default: `'supermarket'`) Type of server to upload to. Valid values: `'supermarket'`, `'server'`
+* **ssl_verify_mode** - (default: `true`) Enable/Disable SSL verify
+
+Chef Server Specific Parameters
+===============================
+The following are parameters used for configuration this plugin when uploading to a Chef Server:
 * **org** - Chef org to use on the Chef server
-* **freeze** - Wether or not to freeze the version
-* **ssl_verify_mode** - Enable/Disable SSL verify
+* **freeze** - (default: `true`) Wether or not to freeze the version
 
-The following is a sample Docker configuration in your .drone.yml file:
+Example
+=======
 
+### Minimal Definition
+This will upload the cookbook to a supermarket server
+```yaml
+deploy:
+  chef:
+    user: userid
+    key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
+    server: https://mysupermarket.com
+```
+
+### Chef Server Definition
 ```yaml
 deploy:
   chef:
     user: userid
     key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
     server: https://chefserver.com
+    type: server
     org: my_org
     freeze: true
-    ssl_verify_mode: true
+    ssl_verify_mode: false
 ```

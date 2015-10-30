@@ -61,10 +61,17 @@ end
 #
 # Is cookbook already uploaded at given version?
 #
-def cookbook_uploaded?
+def cookbook_uploaded? # rubocop:disable AbcSize
+  puts "Checking if #{cookbook.name}@#{cookbook.version} " \
+       "is already uploaded to #{chef_url}"
+
   command = ["knife cookbook show #{cookbook.name} #{cookbook.version}"]
   command << "-c #{knife_rb}"
   `#{command.join(' ')}`
+
+  puts "Cookbook #{cookbook.name} version #{cookbook.version} " \
+       "already uploaded to #{chef_url}" if $?.success? # rubocop:disable SpecialGlobalVars, LineLength
+
   $?.success? # rubocop:disable SpecialGlobalVars
 end
 
@@ -107,24 +114,57 @@ end
 #
 # Write knife.rb config
 #
-def write_knife_rb
+def write_knife_rb # rubocop:disable AbcSize
   File.open(knife_rb, 'w') do |f|
     f.puts "node_name '#{build_args['user']}'"
     f.puts "client_key '#{key_path}'"
     f.puts "chef_server_url '#{chef_url}'"
     f.puts "cookbook_path '#{Pathname.new(workspace).parent}'"
     f.puts "ssl_verify_mode #{ssl_verify_mode}"
+    f.puts "knife[:supermarket_site] = '#{build_args['server']}'"
   end
+end
+
+#
+# The type of cookbook upload
+#
+def upload_type
+  return 'supermarket' unless build_args.key? 'type'
+  build_args['type']
 end
 
 #
 # Upload the cookbook
 #
-def upload_cookbook # rubocop:disable AbcSize
+def upload_cookbook
   puts "Uploading cookbook #{cookbook.name}@#{cookbook.version}"
+  case upload_type
+  when 'supermarket'
+    upload_cookbook_supermarket
+  when 'server'
+    upload_cookbook_server unless cookbook_uploaded?
+  else
+    fail "No logic to upload cookbooks to type '#{upload_type}'."
+  end
+end
+
+#
+# Upload cookbook to a Chef Server
+#
+def upload_cookbook_server
   command = ["knife cookbook upload #{cookbook.name}"]
   command << "-c #{knife_rb}"
   command << '--freeze' if freeze
+  puts `#{command.join(' ')}`
+  fail 'Failed to upload cookbook' unless $?.success? # rubocop:disable SpecialGlobalVars, LineLength
+end
+
+#
+# Upload cookbook to Supermarket
+#
+def upload_cookbook_supermarket
+  command = ["knife supermarket share #{cookbook.name}"]
+  command << "-c #{knife_rb}"
   puts `#{command.join(' ')}`
   fail 'Failed to upload cookbook' unless $?.success? # rubocop:disable SpecialGlobalVars, LineLength
 end
@@ -135,11 +175,4 @@ end
 verify_reqs
 write_key
 write_knife_rb
-puts "Checking if #{cookbook.name}@#{cookbook.version} " \
-     "is already uploaded to #{chef_url}"
-if cookbook_uploaded?
-  puts "Cookbook #{cookbook.name} version #{cookbook.version} " \
-       "already uploaded to #{chef_url}"
-  exit
-end
 upload_cookbook

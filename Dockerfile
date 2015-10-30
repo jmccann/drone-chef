@@ -4,6 +4,8 @@
 
 FROM jmccann/drone-chefdk
 
+RUN chef gem install knife-supermarket
+
 ADD . /opt/drone-chef/
 
 ENTRYPOINT ["/opt/drone-chef/drone-chef"]
