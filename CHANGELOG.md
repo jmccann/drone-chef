@@ -1,3 +1,7 @@
+0.3.0
+=====
+* Add check for if cookbook is already uploaded to supermarket
+
 0.2.0
 =====
 * Allow uploading Chef cookbooks to a supermarket
