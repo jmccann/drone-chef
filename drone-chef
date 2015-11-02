@@ -63,13 +63,21 @@ def verify_reqs # rubocop:disable AbcSize
 end
 
 #
+# The knife command to show details on a cookbook based on upload_type
+#
+def knife_show
+  return 'knife cookbook show' if upload_type == 'server'
+  'knife supermarket show'
+end
+
+#
 # Is cookbook already uploaded at given version?
 #
 def cookbook_uploaded? # rubocop:disable AbcSize
   puts "Checking if #{cookbook.name}@#{cookbook.version} " \
        "is already uploaded to #{chef_url}"
 
-  command = ["knife cookbook show #{cookbook.name} #{cookbook.version}"]
+  command = ["#{knife_show} #{cookbook.name} #{cookbook.version}"]
   command << "-c #{knife_rb}"
   `#{command.join(' ')}`
 
@@ -146,7 +154,7 @@ def upload_cookbook
   when 'supermarket'
     upload_cookbook_supermarket
   when 'server'
-    upload_cookbook_server unless cookbook_uploaded?
+    upload_cookbook_server
   else
     fail "No logic to upload cookbooks to type '#{upload_type}'."
   end
@@ -179,4 +187,5 @@ end
 verify_reqs
 write_key
 write_knife_rb
+exit if cookbook_uploaded?
 upload_cookbook
