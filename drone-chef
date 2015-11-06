@@ -66,14 +66,14 @@ def verify_reqs # rubocop:disable AbcSize
   fail 'Username required' unless build_args.key? 'user'
   fail 'Key required' unless build_args.key? 'key'
   fail 'Server URL required' unless build_args.key? 'server'
-  verify_reqs_server if upload_type == 'server'
+  verify_reqs_server if upload_to == 'server'
 end
 
 #
-# The knife command to show details on a cookbook based on upload_type
+# The knife command to show details on a cookbook based on upload_to
 #
 def knife_show
-  return 'knife cookbook show' if upload_type == 'server'
+  # return 'knife cookbook show' if upload_to == 'server'
   'knife supermarket show'
 end
 
@@ -145,38 +145,74 @@ def write_knife_rb # rubocop:disable AbcSize
 end
 
 #
-# The type of cookbook upload
+# What we are uploading to
+#   * server
+#   * supermarket
 #
-def upload_type
+def upload_to
   return 'supermarket' unless build_args.key? 'type'
   build_args['type']
+end
+
+#
+# What we are uploading from
+#   * cookbook
+#   * org
+#
+def upload_from
+  return 'cookbook' if File.exist? 'metadata.rb'
+  'org'
+end
+
+def upload_message
+  if upload_from == 'cookbook'
+    puts "Uploading cookbook #{cookbook.name}@#{cookbook.version}"
+  end
+  puts 'Uploading cookbooks' if upload_from == 'org'
 end
 
 #
 # Upload the cookbook
 #
 def upload_cookbook
-  puts "Uploading cookbook #{cookbook.name}@#{cookbook.version}"
-  case upload_type
+  upload_message
+
+  case upload_to
   when 'supermarket'
     upload_cookbook_supermarket
   when 'server'
     upload_cookbook_server
   else
-    fail "No logic to upload cookbooks to type '#{upload_type}'."
+    fail "No logic to upload cookbooks to type '#{upload_to}'."
   end
 end
 
 #
-# Upload cookbook to a Chef Server
+# Command to generate Berkshelf lockfile
 #
-def upload_cookbook_server
+def berks_install
+  `berks install` unless File.exist? 'Berksfile.lock'
+  fail 'Failed to generate berks lockfile' unless $?.success? # rubocop:disable SpecialGlobalVars, LineLength
+end
+
+#
+# Command to upload cookbook(s) with Berkshelf
+#
+def berks_upload
   command = ['berks upload']
   command << "#{cookbook.name}" unless recursive
   command << "-c #{knife_rb}"
   command << '--no-no-freeze' if freeze
   puts `#{command.join(' ')}`
   fail 'Failed to upload cookbook' unless $?.success? # rubocop:disable SpecialGlobalVars, LineLength
+end
+
+#
+# Upload cookbook(s) to a Chef Server
+#
+def upload_cookbook_server
+  berks_install
+  berks_upload
 end
 
 #
@@ -195,5 +231,5 @@ end
 verify_reqs
 write_key
 write_knife_rb
-exit if cookbook_uploaded?
+exit if upload_to == 'supermarket' && cookbook_uploaded?
 upload_cookbook
