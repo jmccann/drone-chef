@@ -1,3 +1,9 @@
+1.0.0
+=====
+* Use berkshelf to upload cookbooks to chef server
+* Allow uploading dependency cookbooks to chef server
+* Change attribute `ssl_verify_mode` to `ssl_verify`
+
 0.3.0
 =====
 * Add check for if cookbook is already uploaded to supermarket
