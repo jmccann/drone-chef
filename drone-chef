@@ -206,7 +206,6 @@ def berks_upload # rubocop:disable AbcSize
   command = ['berks upload']
   command << "#{cookbook.name}" unless recursive
   command << "-b #{workspace}/Berksfile"
-  command << "-c #{knife_rb}"
   command << '--no-no-freeze' if freeze
   puts `#{command.join(' ')}`
   fail 'Failed to upload cookbook' unless $?.success? # rubocop:disable SpecialGlobalVars, LineLength
