@@ -228,9 +228,18 @@ def upload_cookbook_supermarket
   fail 'Failed to upload cookbook' unless $?.success? # rubocop:disable SpecialGlobalVars, LineLength
 end
 
+def write_netrc
+  File.open("#{Dir.home}/.netrc", 'w') do |f|
+    f.puts "machine #{build_data['workspace']['netrc']['machine']}"
+    f.puts "  login #{build_data['workspace']['netrc']['login']}"
+    f.puts "  password #{build_data['workspace']['netrc']['password']}"
+  end
+end
+
 ######
 # MAIN
 ######
+write_netrc
 verify_reqs
 write_key
 write_knife_rb
