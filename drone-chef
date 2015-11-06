@@ -191,6 +191,7 @@ end
 # Command to generate Berkshelf lockfile
 #
 def berks_install
+  puts 'Generating Berksfile.lock'
   `berks install -b #{workspace}/Berksfile` unless File.exist? 'Berksfile.lock'
   fail 'Failed to generate berks lockfile' unless $?.success? # rubocop:disable SpecialGlobalVars, LineLength
 end
@@ -198,7 +199,8 @@ end
 #
 # Command to upload cookbook(s) with Berkshelf
 #
-def berks_upload
+def berks_upload # rubocop:disable AbcSize
+  puts 'Running berks upload'
   command = ['berks upload']
   command << "#{cookbook.name}" unless recursive
   command << "-b #{workspace}/Berksfile"
