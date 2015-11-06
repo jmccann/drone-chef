@@ -3,6 +3,7 @@
 require 'json'
 require 'pathname'
 require 'chef/cookbook/metadata'
+require 'fileutils'
 
 #
 # Parse build data JSON string
@@ -119,7 +120,7 @@ end
 # Knife.rb path
 #
 def knife_rb
-  '/tmp/knife.rb'
+  "#{Dir.home}/.chef/knife.rb"
 end
 
 #
@@ -134,6 +135,7 @@ end
 # Write knife.rb config
 #
 def write_knife_rb # rubocop:disable AbcSize
+  FileUtils.mkdir_p File.dirname knife_rb
   File.open(knife_rb, 'w') do |f|
     f.puts "node_name '#{build_args['user']}'"
     f.puts "client_key '#{key_path}'"
