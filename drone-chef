@@ -46,6 +46,13 @@ def freeze
   end
 end
 
+def recursive
+  @recursive ||= begin
+    return true if build_args['recursive'].nil?
+    build_args['recursive']
+  end
+end
+
 def verify_reqs_server
   fail 'Chef organization required' unless build_args.key? 'org'
 end
@@ -164,9 +171,10 @@ end
 # Upload cookbook to a Chef Server
 #
 def upload_cookbook_server
-  command = ["knife cookbook upload #{cookbook.name}"]
+  command = ['berks upload']
+  command << "#{cookbook.name}" unless recursive
   command << "-c #{knife_rb}"
-  command << '--freeze' if freeze
+  command << '--no-no-freeze' if freeze
   puts `#{command.join(' ')}`
   fail 'Failed to upload cookbook' unless $?.success? # rubocop:disable SpecialGlobalVars, LineLength
 end
