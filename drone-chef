@@ -123,12 +123,18 @@ def knife_rb
   "#{Dir.home}/.chef/knife.rb"
 end
 
+def ssl_verify
+  @ssl_verify ||= begin
+    return true if build_args['ssl_verify'].nil?
+    build_args['ssl_verify']
+  end
+end
+
 #
 # SSL mode when when connecting to chef server
 #
 def ssl_verify_mode
-  return ':verify_peer' unless build_args.key? 'ssl_verify_mode'
-  build_args['ssl_verify_mode'] ? ':verify_peer' : ':verify_none'
+  ssl_verify ? ':verify_peer' : ':verify_none'
 end
 
 #
@@ -207,6 +213,7 @@ def berks_upload # rubocop:disable AbcSize
   command << "#{cookbook.name}" unless recursive
   command << "-b #{workspace}/Berksfile"
   command << '--no-no-freeze' if freeze
+  command << '--no-ssl-verify' unless build_args['ssl_verify']
   puts `#{command.join(' ')}`
   fail 'Failed to upload cookbook' unless $?.success? # rubocop:disable SpecialGlobalVars, LineLength
 end
