@@ -71,21 +71,13 @@ def verify_reqs # rubocop:disable AbcSize
 end
 
 #
-# The knife command to show details on a cookbook based on upload_to
-#
-def knife_show
-  # return 'knife cookbook show' if upload_to == 'server'
-  'knife supermarket show'
-end
-
-#
 # Is cookbook already uploaded at given version?
 #
 def cookbook_uploaded? # rubocop:disable AbcSize
   puts "Checking if #{cookbook.name}@#{cookbook.version} " \
        "is already uploaded to #{chef_url}"
 
-  command = ["#{knife_show} #{cookbook.name} #{cookbook.version}"]
+  command = ["knife supermarket show #{cookbook.name} #{cookbook.version}"]
   command << "-c #{knife_rb}"
   `#{command.join(' ')}`
 
@@ -187,6 +179,7 @@ def upload_cookbook
 
   case upload_to
   when 'supermarket'
+    exit if cookbook_uploaded?
     upload_cookbook_supermarket
   when 'server'
     upload_cookbook_server
@@ -251,5 +244,4 @@ write_netrc
 verify_reqs
 write_key
 write_knife_rb
-exit if upload_to == 'supermarket' && cookbook_uploaded?
 upload_cookbook
