@@ -1,3 +1,7 @@
+1.0.1
+=====
+* fix `berks install` not honoring ssl_verfiy when set to false
+
 1.0.0
 =====
 * Use berkshelf to upload cookbooks to chef server
