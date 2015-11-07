@@ -200,13 +200,12 @@ end
 #
 # Command to upload cookbook(s) with Berkshelf
 #
-def berks_upload # rubocop:disable AbcSize
+def berks_upload
   puts 'Running berks upload'
   command = ['berks upload']
   command << "#{cookbook.name}" unless recursive
   command << "-b #{workspace}/Berksfile"
   command << '--no-no-freeze' if freeze
-  command << '--no-ssl-verify' unless build_args['ssl_verify']
   puts `#{command.join(' ')}`
   fail 'Failed to upload cookbook' unless $?.success? # rubocop:disable SpecialGlobalVars, LineLength
 end
@@ -237,9 +236,17 @@ def write_netrc
   end
 end
 
+def write_berks_config
+  FileUtils.mkdir_p "#{Dir.home}/.berkshelf"
+  File.open("#{Dir.home}/.berkshelf/config.json", 'w') do |f|
+    f.puts '{"ssl":{"verify":false}}'
+  end
+end
+
 ######
 # MAIN
 ######
+write_berks_config unless build_args['ssl_verify']
 write_netrc
 verify_reqs
 write_key
