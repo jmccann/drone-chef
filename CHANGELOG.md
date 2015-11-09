@@ -1,3 +1,7 @@
+2.0.1
+=====
+* bug: Download cookbooks to prepare for upload to chef server
+
 2.0.0
 =====
 * Major rewrite - no breaking changes but may have introduced bugs
