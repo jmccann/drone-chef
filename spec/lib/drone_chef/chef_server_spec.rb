@@ -34,6 +34,7 @@ describe DroneChef::ChefServer do
     $stdout = File.open(File::NULL, 'w')
 
     allow(File).to receive(:exist?).and_call_original
+    allow(Dir).to receive(:exist?).and_call_original
   end
 
   after do
@@ -128,31 +129,58 @@ describe DroneChef::ChefServer do
       plugin_args.delete 'freeze'
       plugin_args.delete 'recursive'
 
-      allow(server).to receive(:`).with('berks install -b /path/to/project/Berksfile')
       allow(server).to receive(:process_last_status).and_return(process_status)
       allow(server).to receive(:cookbook).and_return(cookbook)
+      allow(Dir).to receive(:exist?)
+        .with('/path/to/project/{roles,environments,data_bags}')
+        .and_return(['/path/to/project/roles'])
+      allow(File).to receive(:exist?).with('/path/to/project/metadata.rb').and_return(true)
     end
 
     it 'retrieves cookbook and dependency cookbooks' do
-      allow(server).to receive(:`).with(/berks upload/)
+      allow(server).to receive(:`).with(/berks /)
       expect(server).to receive(:`).with('berks install -b /path/to/project/Berksfile')
       server.upload
     end
 
     it 'uploads cookbooks to chef server' do
+      allow(server).to receive(:berks_install)
       expect(server).to receive(:`).with('berks upload -b /path/to/project/Berksfile')
       server.upload
     end
 
     it 'uploads a cookbook to chef server' do
       plugin_args['recursive'] = false
+      allow(server).to receive(:berks_install)
+
       expect(server).to receive(:`).with('berks upload test_cookbook -b /path/to/project/Berksfile')
       server.upload
     end
 
     it 'does not freeze cookbooks uploaded to chef server' do
       plugin_args['freeze'] = false
+      allow(server).to receive(:berks_install)
+
       expect(server).to receive(:`).with('berks upload -b /path/to/project/Berksfile --no-freeze')
+      server.upload
+    end
+
+    it 'uploads chef org data if not a cookbook' do
+      allow(File).to receive(:exist?).with('/path/to/project/metadata.rb').and_return(false)
+      allow(server).to receive(:chef_data?).and_return(true)
+
+      expect(server).not_to receive(:berks_install)
+      expect(server).not_to receive(:berks_upload)
+      expect(server).to receive(:`).with('knife upload /path/to/project -c /root/.chef/knife.rb')
+      server.upload
+    end
+
+    it 'does not upload chef org data if non exists' do
+      allow(File).to receive(:exist?).with('/path/to/project/metadata.rb').and_return(false)
+      allow(server).to receive(:chef_data?).and_return(false)
+
+      expect(server).not_to receive(:`)
+        .with('knife upload /path/to/project -c /root/.chef/knife.rb')
       server.upload
     end
   end

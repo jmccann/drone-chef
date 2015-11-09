@@ -33,12 +33,13 @@ module DroneChef
       write_berks_config unless @config.ssl_verify
     end
 
+    #
+    # Upload to chef server
+    #
     def upload
-      berks_install
-      berks_upload
-      # roles.upload unless cookbook?
-      # environments.upload unless cookbook?
-      # data_bags.upload unless cookbook?
+      berks_install if cookbook?
+      berks_upload if cookbook?
+      knife_upload unless cookbook? || !chef_data?
     end
 
     private
@@ -98,6 +99,22 @@ module DroneChef
       command << '--no-freeze' unless freeze
       puts `#{command.join(' ')}`
       fail 'Failed to upload cookbook' unless process_last_status.success?
+    end
+
+    def chef_data?
+      !Dir.glob("#{@config.workspace}/{roles,environments,data_bags}").empty?
+    end
+
+    #
+    # Upload any roles, environments and data_bags
+    #
+    def knife_upload
+      puts 'Uploading roles, environments and data bags'
+      command = ['knife upload']
+      command << "#{@config.workspace}"
+      command << "-c #{@config.knife_rb}"
+      puts `#{command.join(' ')}`
+      fail 'knife upload failed' unless process_last_status.success?
     end
 
     def process_last_status
