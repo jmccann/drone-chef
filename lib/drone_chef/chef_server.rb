@@ -82,10 +82,9 @@ module DroneChef
     # Command to generate Berkshelf lockfile
     #
     def berks_install
-      unless File.exist? "#{@config.workspace}/Berksfile.lock"
-        puts 'Generating Berksfile.lock'
-        `berks install -b #{@config.workspace}/Berksfile`
-      end
+      return if File.exist? "#{@config.workspace}/Berksfile.lock"
+      puts 'Generating Berksfile.lock'
+      `berks install -b #{@config.workspace}/Berksfile`
       fail 'Failed to generate berks lockfile' unless process_last_status.success?
     end
 
