@@ -1,3 +1,7 @@
+2.1.0
+=====
+* Can upload chef_org data to a chef server
+
 2.0.1
 =====
 * bug: Download cookbooks to prepare for upload to chef server
