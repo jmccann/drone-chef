@@ -68,6 +68,7 @@ module DroneChef
         f.puts "node_name '#{@config.user}'"
         f.puts "client_key '#{@config.key_path}'"
         f.puts "chef_server_url '#{url}'"
+        f.puts "chef_repo_path '#{@config.workspace}'"
         f.puts "ssl_verify_mode #{@config.ssl_verify_mode}"
       end
     end
@@ -111,7 +112,7 @@ module DroneChef
     def knife_upload
       puts 'Uploading roles, environments and data bags'
       command = ['knife upload']
-      command << "#{@config.workspace}"
+      command << '.'
       command << "-c #{@config.knife_rb}"
       puts `#{command.join(' ')}`
       fail 'knife upload failed' unless process_last_status.success?

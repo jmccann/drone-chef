@@ -100,6 +100,7 @@ describe DroneChef::ChefServer do
       expect(file).to receive(:puts).with("client_key '/tmp/key.pem'")
       expect(file).to receive(:puts)
         .with("chef_server_url 'https://myserver.com/organizations/my_chef_org'")
+      expect(file).to receive(:puts).with("chef_repo_path '/path/to/project'")
       expect(file).to receive(:puts).with('ssl_verify_mode :verify_none')
 
       server.write_configs
@@ -171,7 +172,7 @@ describe DroneChef::ChefServer do
 
       expect(server).not_to receive(:berks_install)
       expect(server).not_to receive(:berks_upload)
-      expect(server).to receive(:`).with('knife upload /path/to/project -c /root/.chef/knife.rb')
+      expect(server).to receive(:`).with('knife upload . -c /root/.chef/knife.rb')
       server.upload
     end
 
@@ -180,7 +181,7 @@ describe DroneChef::ChefServer do
       allow(server).to receive(:chef_data?).and_return(false)
 
       expect(server).not_to receive(:`)
-        .with('knife upload /path/to/project -c /root/.chef/knife.rb')
+        .with('knife upload . -c /root/.chef/knife.rb')
       server.upload
     end
   end
