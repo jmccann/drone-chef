@@ -172,6 +172,7 @@ describe DroneChef::ChefServer do
 
       expect(server).not_to receive(:berks_install)
       expect(server).not_to receive(:berks_upload)
+      expect(Dir).to receive(:chdir).with('/path/to/project')
       expect(server).to receive(:`).with('knife upload . -c /root/.chef/knife.rb')
       server.upload
     end

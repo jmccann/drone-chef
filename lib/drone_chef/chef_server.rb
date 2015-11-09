@@ -114,7 +114,10 @@ module DroneChef
       command = ['knife upload']
       command << '.'
       command << "-c #{@config.knife_rb}"
+
+      Dir.chdir(@config.workspace)
       puts `#{command.join(' ')}`
+
       fail 'knife upload failed' unless process_last_status.success?
     end
 
