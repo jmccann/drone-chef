@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift('/opt/drone-chef/lib') if Dir.exist? '/opt/drone-chef/lib'
+
+require 'drone_chef'
+
+drone_data = DroneChef::Drone.new ARGV[1]
+config = DroneChef::Config.new drone_data
+
+case config.type
+when 'supermarket'
+  server = DroneChef::Supermarket.new config
+when 'server'
+  server = DroneChef::ChefServer.new config
+else
+  fail "Invalid type '#{config.type}' specified"
+end
+
+server.write_configs
+server.upload
