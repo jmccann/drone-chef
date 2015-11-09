@@ -79,13 +79,12 @@ module DroneChef
     end
 
     #
-    # Command to generate Berkshelf lockfile
+    # Command to gather necessary cookbooks
     #
     def berks_install
-      return if File.exist? "#{@config.workspace}/Berksfile.lock"
-      puts 'Generating Berksfile.lock'
+      puts 'Retrieving cookbooks'
       `berks install -b #{@config.workspace}/Berksfile`
-      fail 'Failed to generate berks lockfile' unless process_last_status.success?
+      fail 'Failed to retrieve cookbooks' unless process_last_status.success?
     end
 
     #

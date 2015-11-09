@@ -133,17 +133,9 @@ describe DroneChef::ChefServer do
       allow(server).to receive(:cookbook).and_return(cookbook)
     end
 
-    it 'generates berks lockfile if does not exist' do
+    it 'retrieves cookbook and dependency cookbooks' do
       allow(server).to receive(:`).with(/berks upload/)
-      allow(File).to receive(:exist?).with('/path/to/project/Berksfile.lock').and_return(false)
       expect(server).to receive(:`).with('berks install -b /path/to/project/Berksfile')
-      server.upload
-    end
-
-    it 'does not generate berks lockfile if exists' do
-      allow(server).to receive(:`).with(/berks upload/)
-      allow(File).to receive(:exist?).with('/path/to/project/Berksfile.lock').and_return(true)
-      expect(server).not_to receive(:`).with('berks install -b /path/to/project/Berksfile')
       server.upload
     end
 
