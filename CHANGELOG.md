@@ -1,3 +1,7 @@
+2.2.0
+=====
+* Based on ChefDK 0.10.0 now (previsouly 0.9.0)
+
 2.1.0
 =====
 * Can upload chef_org data to a chef server
