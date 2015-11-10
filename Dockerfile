@@ -2,7 +2,7 @@
 #
 #     docker build --rm=true -t jmccann/drone-chef .
 
-FROM jmccann/drone-chefdk
+FROM jmccann/drone-chefdk:0.10.0.2
 
 RUN chef gem install knife-supermarket
 
