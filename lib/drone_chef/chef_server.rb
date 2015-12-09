@@ -27,6 +27,12 @@ module DroneChef
       File.exist? "#{@config.workspace}/metadata.rb"
     end
 
+    def berksfile?
+      return true if File.exist? "#{@config.workspace}/Berksfile"
+      return true if File.exist? "#{@config.workspace}/Berksfile.lock"
+      false
+    end
+
     def write_configs
       @config.write_configs
       write_knife_rb
@@ -37,8 +43,8 @@ module DroneChef
     # Upload to chef server
     #
     def upload
-      berks_install if cookbook?
-      berks_upload if cookbook?
+      berks_install if berksfile?
+      berks_upload if berksfile?
       knife_upload unless cookbook? || !chef_data?
     end
 
