@@ -1,3 +1,7 @@
+2.2.1
+=====
+* Fix bug where cookbooks would not upload to chef server
+
 2.2.0
 =====
 * Based on ChefDK 0.10.0 now (previsouly 0.9.0)
