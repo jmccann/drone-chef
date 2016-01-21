@@ -41,5 +41,5 @@ deploy:
     type: server
     org: my_org
     freeze: true
-    ssl_verify_mode: false
+    ssl_verify: false
 ```
