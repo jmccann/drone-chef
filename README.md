@@ -1,4 +1,4 @@
-Use the chef plugin to deploy cookbooks to a Chef server.
+Use the chef plugin to deploy cookbooks to a Chef Server or Supermarket.
 
 Global Parameters
 =================
