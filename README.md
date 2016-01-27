@@ -1,7 +1,5 @@
 # drone-chef
-Drone plugin for deploying cookbooks to a chef server
-
-Use the chef plugin to deploy cookbooks to a Chef Server or Supermarket.
+Drone plugin for deploying cookbooks to a Chef Server or Supermarket.
 
 Global Parameters
 =================
