@@ -1,11 +1,25 @@
-# Docker image for the chef plugin
-#
-#     docker build --rm=true -t jmccann/drone-chef .
+FROM alpine:3.3
 
-FROM jmccann/drone-chefdk:0.10.0.2
-
-RUN chef gem install knife-supermarket
+RUN apk update && \
+  apk add \
+    ca-certificates \
+    git \
+    ruby \
+    ruby-dev \
+    build-base \
+    perl \
+    libffi-dev \
+    bash && \
+  gem install --no-ri --no-rdoc \
+    chef \
+    berkshelf \
+    knife-supermarket && \
+  apk del \
+    bash \
+    libffi-dev \
+    perl \
+    build-base && \
+  rm -rf /var/cache/apk/*
 
 ADD . /opt/drone-chef/
-
 ENTRYPOINT ["/opt/drone-chef/bin/drone-chef"]
