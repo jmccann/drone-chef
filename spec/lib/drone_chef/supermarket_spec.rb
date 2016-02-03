@@ -2,6 +2,8 @@ require 'spec_helper'
 require 'drone_chef/config'
 require 'drone_chef/supermarket'
 
+require 'stringio'
+
 describe DroneChef::Supermarket do
   let(:server) { DroneChef::Supermarket.new config }
   let(:config) do
@@ -28,12 +30,8 @@ describe DroneChef::Supermarket do
   end
 
   before do
-    @original_stderr = $stderr
-    @original_stdout = $stdout
-
-    # Redirect stderr and stdout
-    $stderr = File.open(File::NULL, 'w')
-    $stdout = File.open(File::NULL, 'w')
+    $stdout = StringIO.new
+    $stderr = StringIO.new
 
     allow(File).to receive(:exist?).and_call_original
     allow(File).to receive(:exist?).with('/path/to/project/metadata.rb').and_return(true)
@@ -51,11 +49,28 @@ describe DroneChef::Supermarket do
   end
 
   after do
-    $stderr = @original_stderr
-    $stdout = @original_stdout
+    $stdout = STDOUT
+    $stderr = STDERR
   end
 
   describe '#upload' do
+    it 'logs that it is checking if cookbook has been uploaded' do
+      server.upload
+      expect($stdout.string).to match(%r{INFO: Checking if test_cookbook@1.2.3 is already shared to https://myserver.com})
+    end
+
+    it 'logs that cookbook was already uploaded' do
+      # Defaults to test like cookbook was already uploaded
+      server.upload
+      expect($stdout.string).to match(%r{INFO: Cookbook test_cookbook version 1.2.3 already uploaded to https://myserver.com})
+    end
+
+    it 'does not log that cookbook was already uploaded if it was not' do
+      allow(server).to receive(:knife_show).and_return(false) # Fake that cookbook was not uploaded
+      server.upload
+      expect($stdout.string).not_to match(/already uploaded/)
+    end
+
     it 'checks if cookbook is already uploaded' do
       expect(knife_show_shellout).to receive(:run_command)
       server.upload

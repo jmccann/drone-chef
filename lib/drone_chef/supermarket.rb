@@ -13,9 +13,9 @@ module DroneChef
     end
 
     def upload # rubocop:disable AbcSize
-      puts "Checking if #{cookbook.name}@#{cookbook.version} " \
+      puts "INFO: Checking if #{cookbook.name}@#{cookbook.version} " \
            "is already shared to #{@config.server}"
-      puts "Cookbook #{cookbook.name} version #{cookbook.version} " \
+      puts "INFO: Cookbook #{cookbook.name} version #{cookbook.version} " \
            "already uploaded to #{@config.server}" if uploaded?
       return if uploaded?
       fail 'Failed to upload cookbook' unless upload_command
