@@ -50,6 +50,10 @@ module DroneChef
       "#{Dir.home}/.chef/knife.rb"
     end
 
+    def debug?
+      @drone.debug?
+    end
+
     private
 
     #

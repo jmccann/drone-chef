@@ -1,5 +1,6 @@
 require 'pathname'
 require 'fileutils'
+require 'mixlib/shellout'
 
 module DroneChef
   #
@@ -58,8 +59,10 @@ module DroneChef
     def upload_command
       command = ["knife supermarket share #{cookbook.name}"]
       command << "-c #{@config.knife_rb}"
-      puts `#{command.join(' ')}`
-      process_last_status.success?
+      cmd = Mixlib::ShellOut.new(command.join(' '))
+      cmd.run_command
+      puts cmd.stdout if @config.debug?
+      !cmd.error?
     end
 
     def uploaded?
@@ -70,8 +73,9 @@ module DroneChef
       @cookbook_uploaded ||= begin
         command = ["knife supermarket show #{cookbook.name} #{cookbook.version}"]
         command << "-c #{@config.knife_rb}"
-        `#{command.join(' ')}`
-        process_last_status.success?
+        cmd = Mixlib::ShellOut.new(command.join(' '))
+        cmd.run_command
+        !cmd.error?
       end
     end
   end
