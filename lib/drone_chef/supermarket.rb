@@ -56,12 +56,13 @@ module DroneChef
       end
     end
 
-    def upload_command
+    def upload_command # rubocop:disable AbcSize
       command = ["knife supermarket share #{cookbook.name}"]
       command << "-c #{@config.knife_rb}"
       cmd = Mixlib::ShellOut.new(command.join(' '))
       cmd.run_command
-      puts cmd.stdout if @config.debug?
+      puts "DEBUG: knife supermarket share stdout: #{cmd.stdout}" if @config.debug?
+      puts "ERROR: knife supermarket share stderr: #{cmd.stderr}" if cmd.error?
       !cmd.error?
     end
 

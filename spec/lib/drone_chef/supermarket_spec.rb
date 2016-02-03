@@ -22,11 +22,11 @@ describe DroneChef::Supermarket do
 
   let(:knife_show_shellout) do
     double('knife supermarket show test_cookbook',
-           run_command: nil, stdout: '00:00', error?: false)
+           run_command: nil, stdout: 'Good output', stderr: 'ERROR: The object you are looking for could not be found', error?: false)
   end
   let(:knife_share_shellout) do
     double('knife supermarket share test_cookbook',
-           run_command: nil, stdout: '00:00', error?: false)
+           run_command: nil, stdout: 'share output', stderr: 'share error', error?: false)
   end
 
   before do
@@ -80,6 +80,26 @@ describe DroneChef::Supermarket do
       allow(server).to receive(:knife_show).and_return(false)
       expect(knife_share_shellout).to receive(:run_command)
       server.upload
+    end
+
+    it 'shows debug output when debug?' do
+      allow(config).to receive(:debug?).and_return(true)
+      allow(server).to receive(:knife_show).and_return(false) # Fake that cookbook was not uploaded
+      server.upload
+      expect($stdout.string).to match(/share output/)
+    end
+
+    it 'does not log debug output during upload' do
+      allow(server).to receive(:knife_show).and_return(false) # Fake that cookbook was not uploaded
+      server.upload
+      expect($stdout.string).not_to match(/share output/)
+    end
+
+    it 'shows upload error' do
+      allow(server).to receive(:knife_show).and_return(false) # Fake that cookbook was not uploaded
+      allow(knife_share_shellout).to receive(:error?).and_return(true)
+      expect { server.upload }.to raise_error('Failed to upload cookbook')
+      expect($stdout.string).to match(/share error/)
     end
 
     it 'does not share if already uploaded' do
