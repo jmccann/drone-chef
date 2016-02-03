@@ -19,9 +19,10 @@ module DroneChef
       @data['vargs']
     end
 
-    def debug?
-      return false if !!@data['vargs']['debug'] == @data['vargs']['debug'] # rubocop:disable DoubleNegation, LineLength
-      @data['vargs']['debug']
+    def debug? # rubocop:disable AbcSize
+      return false if !!@data['vargs']['debug'] == @data['vargs']['debug'] # rubocop:disable DoubleNegation
+      return false if !!ENV['DEBUG'] == ENV['DEBUG'] # rubocop:disable DoubleNegation
+      @data['vargs']['debug'] || ENV['DEBUG']
     end
 
     private
