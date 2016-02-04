@@ -136,10 +136,6 @@ module DroneChef
       fail 'ERROR: knife upload failed' if cmd.error?
     end
 
-    def process_last_status
-      $?
-    end
-
     def cookbook
       @metadata ||= begin
         metadata = Chef::Cookbook::Metadata.new

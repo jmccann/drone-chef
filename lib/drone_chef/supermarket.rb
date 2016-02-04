@@ -44,10 +44,6 @@ module DroneChef
       end
     end
 
-    def process_last_status
-      $?
-    end
-
     def cookbook
       @metadata ||= begin
         metadata = Chef::Cookbook::Metadata.new

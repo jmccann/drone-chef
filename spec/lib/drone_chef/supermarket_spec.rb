@@ -15,7 +15,6 @@ describe DroneChef::Supermarket do
                                          debug?: false)
   end
   let(:file) { double('File') }
-  let(:process_status) { instance_double('Process::Status', success?: true) }
   let(:cookbook) do
     instance_double('Chef::Cookbook::Metadata', name: 'test_cookbook', version: '1.2.3')
   end
@@ -36,7 +35,6 @@ describe DroneChef::Supermarket do
     allow(File).to receive(:exist?).and_call_original
     allow(File).to receive(:exist?).with('/path/to/project/metadata.rb').and_return(true)
     allow(File).to receive(:exist?).with('/path/to/project/README.md').and_return(true)
-    allow(server).to receive(:process_last_status).and_return(process_status)
     allow(server).to receive(:cookbook).and_return(cookbook)
 
     # Stub shell commands

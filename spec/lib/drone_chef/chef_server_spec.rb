@@ -20,7 +20,6 @@ describe DroneChef::ChefServer do
     }
   end
   let(:file) { double('File') }
-  let(:process_status) { instance_double('Process::Status', success?: true) }
   let(:cookbook) do
     instance_double('Chef::Cookbook::Metadata', name: 'test_cookbook', version: '1.2.3')
   end
@@ -174,7 +173,6 @@ describe DroneChef::ChefServer do
       plugin_args.delete 'freeze'
       plugin_args.delete 'recursive'
 
-      allow(server).to receive(:process_last_status).and_return(process_status)
       allow(server).to receive(:cookbook).and_return(cookbook)
       allow(Dir).to receive(:exist?)
         .with('/path/to/project/{roles,environments,data_bags}')
