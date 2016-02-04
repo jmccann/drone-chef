@@ -76,7 +76,7 @@ desc 'Build'
 task build: ['build:docker']
 
 namespace :test do
-  desc ''
+  desc 'Perform basic cookbook upload tests'
   task :basic do
     verbose(false) do
       puts 'Performing initial upload'
