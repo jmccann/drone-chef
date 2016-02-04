@@ -1,5 +1,9 @@
+AllCops:
+  Exclude:
+    - 'test/**/*'
+
 LineLength:
-  Max: 150
+  Max: 100
 
 SpecialGlobalVars:
   Enabled: false
