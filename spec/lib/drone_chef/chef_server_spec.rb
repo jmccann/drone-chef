@@ -171,6 +171,7 @@ describe DroneChef::ChefServer do
       plugin_args.delete 'recursive'
 
       allow(server).to receive(:cookbook).and_return(cookbook)
+      allow(server).to receive(:berksfile?).and_return(true)
       allow(Dir).to receive(:exist?)
         .with('/path/to/project/{roles,environments,data_bags}')
         .and_return(['/path/to/project/roles'])
@@ -178,20 +179,17 @@ describe DroneChef::ChefServer do
     end
 
     it 'retrieves cookbook and dependency cookbooks' do
-      allow(server).to receive(:berksfile?).and_return(true)
       expect(berks_install_shellout).to receive(:run_command)
       server.upload
     end
 
     it 'uploads cookbooks to chef server' do
-      allow(server).to receive(:berksfile?).and_return(true)
       expect(berks_upload_shellout).to receive(:run_command)
       server.upload
     end
 
     it 'uploads a cookbook to chef server' do
       plugin_args['recursive'] = false
-      allow(server).to receive(:berksfile?).and_return(true)
 
       expect(Mixlib::ShellOut)
         .to receive(:new).with('berks upload test_cookbook -b /path/to/project/Berksfile')
@@ -202,12 +200,19 @@ describe DroneChef::ChefServer do
 
     it 'does not freeze cookbooks uploaded to chef server' do
       plugin_args['freeze'] = false
-      allow(server).to receive(:berksfile?).and_return(true)
 
       expect(Mixlib::ShellOut)
         .to receive(:new).with('berks upload -b /path/to/project/Berksfile --no-freeze')
         .and_return(berks_upload_shellout)
       expect(berks_upload_shellout).to receive(:run_command)
+      server.upload
+    end
+
+    it 'does not upload chef org data from cookbooks' do
+      allow(server).to receive(:cookbook?).and_return(true)
+      allow(server).to receive(:chef_data?).and_return(true)
+
+      expect(knife_upload_shellout).not_to receive(:run_command)
       server.upload
     end
 
@@ -249,13 +254,11 @@ describe DroneChef::ChefServer do
       end
     end
 
-    it 'does not upload chef org data from cookbooks' do
-      allow(server).to receive(:berksfile?).and_return(true)
-      allow(server).to receive(:cookbook?).and_return(true)
-      allow(server).to receive(:chef_data?).and_return(true)
-
-      expect(knife_upload_shellout).not_to receive(:run_command)
-      server.upload
+    context 'logging' do
+      it 'logs failure of retrieving cookbooks' do
+        allow(berks_install_shellout).to receive(:error?).and_return true
+        expect { server.upload }.to raise_error('ERROR: Failed to retrieve cookbooks')
+      end
     end
   end
 end
