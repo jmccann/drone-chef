@@ -1,3 +1,5 @@
+# rubocop:disable LineLength, WordArray
+
 require 'json'
 require 'shellwords'
 
@@ -79,10 +81,15 @@ namespace :test do
     verbose(false) do
       puts 'Performing initial upload'
       sh "docker run -v #{cookbook_path}:/drone/src/github.com/drone/drone -i drone-plugins/drone-chef ARVG[0] #{Shellwords.escape(basic_config.to_json)}"
+      puts ''
+      puts 'Making sure cookbook was uploaded'
+      sh 'knife supermarket show drone-plugin-test'
+      puts ''
       puts 'Performing conflicting upload'
       sh "docker run -v #{cookbook_path}:/drone/src/github.com/drone/drone -i drone-plugins/drone-chef ARVG[0] #{Shellwords.escape(basic_config.to_json)}"
+      puts ''
       puts 'Performing conflicting upload with debug'
-      sh "docker run -v #{cookbook_path}:/drone/src/github.com/drone/drone -i drone-plugins/drone-chef ARVG[0] #{Shellwords.escape(basic_config.deep_merge({ 'vargs' => { 'debug' => true } }).to_json)}"
+      sh "docker run -v #{cookbook_path}:/drone/src/github.com/drone/drone -i drone-plugins/drone-chef ARVG[0] #{Shellwords.escape(basic_config.deep_merge('vargs' => { 'debug' => true }).to_json)} | grep DEBUG"
     end
   end
 end
@@ -90,4 +97,4 @@ end
 desc 'Test'
 task test: ['test:basic']
 
-task default: ['cleanup', 'build', 'test'] # rubocop:disable WordArray
+task default: ['cleanup', 'build', 'test']
