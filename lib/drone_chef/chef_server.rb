@@ -1,5 +1,6 @@
 require 'fileutils'
 require 'chef/cookbook/metadata'
+require 'mixlib/shellout'
 
 module DroneChef
   #
@@ -91,21 +92,26 @@ module DroneChef
     #
     def berks_install
       puts 'Retrieving cookbooks'
-      `berks install -b #{@config.workspace}/Berksfile`
-      fail 'Failed to retrieve cookbooks' unless process_last_status.success?
+      cmd = Mixlib::ShellOut.new("berks install -b #{@config.workspace}/Berksfile")
+      cmd.run_command
+
+      fail 'Failed to retrieve cookbooks' if cmd.error?
     end
 
     #
     # Command to upload cookbook(s) with Berkshelf
     #
-    def berks_upload
+    def berks_upload # rubocop:disable AbcSize
       puts 'Running berks upload'
       command = ['berks upload']
       command << "#{cookbook.name}" unless recursive
       command << "-b #{@config.workspace}/Berksfile"
       command << '--no-freeze' unless freeze
-      puts `#{command.join(' ')}`
-      fail 'Failed to upload cookbook' unless process_last_status.success?
+      cmd = Mixlib::ShellOut.new(command.join(' '))
+      cmd.run_command
+
+      puts "DEBUG: berks upload stdout: #{cmd.stdout}" if @config.debug?
+      fail 'ERROR: Failed to upload cookbook' if cmd.error?
     end
 
     def chef_data?
@@ -122,9 +128,12 @@ module DroneChef
       command << "-c #{@config.knife_rb}"
 
       Dir.chdir(@config.workspace)
-      puts `#{command.join(' ')}`
 
-      fail 'knife upload failed' unless process_last_status.success?
+      cmd = Mixlib::ShellOut.new(command.join(' '))
+      cmd.run_command
+
+      puts "DEBUG: knife upload stdout: #{cmd.stdout}" if @config.debug?
+      fail 'knife upload failed' if cmd.error?
     end
 
     def process_last_status

@@ -9,7 +9,7 @@ describe DroneChef::ChefServer do
                                          write_configs: nil, ssl_verify: false,
                                          knife_rb: '/root/.chef/knife.rb', user: 'johndoe',
                                          key_path: '/tmp/key.pem', server: 'https://myserver.com',
-                                         ssl_verify_mode: ':verify_none')
+                                         ssl_verify_mode: ':verify_none', debug?: false)
   end
 
   let(:plugin_args) do
@@ -25,6 +25,19 @@ describe DroneChef::ChefServer do
     instance_double('Chef::Cookbook::Metadata', name: 'test_cookbook', version: '1.2.3')
   end
 
+  let(:berks_install_shellout) do
+    double('berks install',
+           run_command: nil, stdout: 'berks_install_stdout', stderr: 'berks_install_stderr', error?: false)
+  end
+  let(:berks_upload_shellout) do
+    double('berks upload',
+           run_command: nil, stdout: 'berks_upload_stdout', stderr: 'berks_upload_stderr', error?: false)
+  end
+  let(:knife_upload_shellout) do
+    double('knife upload',
+           run_command: nil, stdout: 'knife_upload_stdout', stderr: 'knife_upload_stderr', error?: false)
+  end
+
   before do
     @original_stderr = $stderr
     @original_stdout = $stdout
@@ -35,6 +48,17 @@ describe DroneChef::ChefServer do
 
     allow(File).to receive(:exist?).and_call_original
     allow(Dir).to receive(:exist?).and_call_original
+
+    # Shell command stubbing
+    allow(Mixlib::ShellOut)
+      .to receive(:new).with('berks install -b /path/to/project/Berksfile')
+      .and_return(berks_install_shellout)
+    allow(Mixlib::ShellOut)
+      .to receive(:new).with('berks upload -b /path/to/project/Berksfile')
+      .and_return(berks_upload_shellout)
+    allow(Mixlib::ShellOut)
+      .to receive(:new).with('knife upload . -c /root/.chef/knife.rb')
+      .and_return(knife_upload_shellout)
   end
 
   after do
@@ -160,19 +184,13 @@ describe DroneChef::ChefServer do
 
     it 'retrieves cookbook and dependency cookbooks' do
       allow(server).to receive(:berksfile?).and_return(true)
-
-      allow(server).to receive(:`).with(/berks /)
-
-      expect(server).to receive(:`).with('berks install -b /path/to/project/Berksfile')
+      expect(berks_install_shellout).to receive(:run_command)
       server.upload
     end
 
     it 'uploads cookbooks to chef server' do
       allow(server).to receive(:berksfile?).and_return(true)
-
-      allow(server).to receive(:berks_install)
-
-      expect(server).to receive(:`).with('berks upload -b /path/to/project/Berksfile')
+      expect(berks_upload_shellout).to receive(:run_command)
       server.upload
     end
 
@@ -180,9 +198,10 @@ describe DroneChef::ChefServer do
       plugin_args['recursive'] = false
       allow(server).to receive(:berksfile?).and_return(true)
 
-      allow(server).to receive(:berks_install)
-
-      expect(server).to receive(:`).with('berks upload test_cookbook -b /path/to/project/Berksfile')
+      expect(Mixlib::ShellOut)
+        .to receive(:new).with('berks upload test_cookbook -b /path/to/project/Berksfile')
+        .and_return(berks_upload_shellout)
+      expect(berks_upload_shellout).to receive(:run_command)
       server.upload
     end
 
@@ -190,9 +209,10 @@ describe DroneChef::ChefServer do
       plugin_args['freeze'] = false
       allow(server).to receive(:berksfile?).and_return(true)
 
-      allow(server).to receive(:berks_install)
-
-      expect(server).to receive(:`).with('berks upload -b /path/to/project/Berksfile --no-freeze')
+      expect(Mixlib::ShellOut)
+        .to receive(:new).with('berks upload -b /path/to/project/Berksfile --no-freeze')
+        .and_return(berks_upload_shellout)
+      expect(berks_upload_shellout).to receive(:run_command)
       server.upload
     end
 
@@ -207,7 +227,7 @@ describe DroneChef::ChefServer do
         expect(server).not_to receive(:berks_install)
         expect(server).not_to receive(:berks_upload)
         expect(Dir).to receive(:chdir).with('/path/to/project')
-        expect(server).to receive(:`).with('knife upload . -c /root/.chef/knife.rb')
+        # expect(server).to receive(:`).with('knife upload . -c /root/.chef/knife.rb')
         server.upload
       end
 
@@ -220,7 +240,7 @@ describe DroneChef::ChefServer do
         expect(server).to receive(:berks_install)
         expect(server).to receive(:berks_upload)
         expect(Dir).to receive(:chdir).with('/path/to/project')
-        expect(server).to receive(:`).with('knife upload . -c /root/.chef/knife.rb')
+        expect(knife_upload_shellout).to receive(:run_command)
         server.upload
       end
 
@@ -230,8 +250,7 @@ describe DroneChef::ChefServer do
         allow(server).to receive(:cookbook?).and_return(false)
         allow(server).to receive(:chef_data?).and_return(false)
 
-        expect(server).not_to receive(:`)
-          .with('knife upload . -c /root/.chef/knife.rb')
+        expect(knife_upload_shellout).not_to receive(:run_command)
         server.upload
       end
     end
@@ -241,8 +260,7 @@ describe DroneChef::ChefServer do
       allow(server).to receive(:cookbook?).and_return(true)
       allow(server).to receive(:chef_data?).and_return(true)
 
-      expect(server).not_to receive(:`)
-        .with('knife upload . -c /root/.chef/knife.rb')
+      expect(knife_upload_shellout).not_to receive(:run_command)
       server.upload
     end
   end
