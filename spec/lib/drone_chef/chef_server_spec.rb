@@ -212,24 +212,24 @@ describe DroneChef::ChefServer do
     end
 
     context 'if not a cookbook' do
-      it 'uploads chef org data only when no cookbooks defined' do
-        # allow(File).to receive(:exist?).with('/path/to/project/metadata.rb').and_return(false)
-        # allow(File).to receive(:exist?).with('/path/to/project/Berksfile').and_return(false)
-        allow(server).to receive(:berksfile?).and_return(false)
+      before do
         allow(server).to receive(:cookbook?).and_return(false)
+      end
+
+      it 'uploads chef org data only when no cookbooks defined' do
+        allow(server).to receive(:berksfile?).and_return(false)
         allow(server).to receive(:chef_data?).and_return(true)
 
         expect(server).not_to receive(:berks_install)
         expect(server).not_to receive(:berks_upload)
         expect(Dir).to receive(:chdir).with('/path/to/project')
-        # expect(server).to receive(:`).with('knife upload . -c /root/.chef/knife.rb')
+        expect(knife_upload_shellout).to receive(:run_command)
         server.upload
       end
 
       it 'uploads chef org data and cookbooks' do
         allow(File).to receive(:exist?).with('/path/to/project/metadata.rb').and_return(false)
         allow(server).to receive(:berksfile?).and_return(true)
-        allow(server).to receive(:cookbook?).and_return(false)
         allow(server).to receive(:chef_data?).and_return(true)
 
         expect(server).to receive(:berks_install)
@@ -242,7 +242,6 @@ describe DroneChef::ChefServer do
       it 'does not upload chef org data if non exists' do
         allow(File).to receive(:exist?).with('/path/to/project/metadata.rb').and_return(false)
         allow(server).to receive(:berksfile?).and_return(false)
-        allow(server).to receive(:cookbook?).and_return(false)
         allow(server).to receive(:chef_data?).and_return(false)
 
         expect(knife_upload_shellout).not_to receive(:run_command)
