@@ -98,7 +98,7 @@ describe DroneChef::Supermarket do
     it 'shows upload error' do
       allow(server).to receive(:knife_show).and_return(false) # Fake that cookbook was not uploaded
       allow(knife_share_shellout).to receive(:error?).and_return(true)
-      expect { server.upload }.to raise_error('Failed to upload cookbook')
+      expect { server.upload }.to raise_error('ERROR: Failed to upload cookbook')
       expect($stdout.string).to match(/share error/)
     end
 

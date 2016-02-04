@@ -18,7 +18,7 @@ module DroneChef
       puts "INFO: Cookbook #{cookbook.name} version #{cookbook.version} " \
            "already uploaded to #{@config.server}" if uploaded?
       return if uploaded?
-      fail 'Failed to upload cookbook' unless upload_command
+      fail 'ERROR: Failed to upload cookbook' unless upload_command
     end
 
     def write_configs
@@ -29,8 +29,8 @@ module DroneChef
     private
 
     def verify_reqs
-      fail 'Missing cookbook metadata.rb' unless File.exist? "#{@config.workspace}/metadata.rb"
-      fail 'Missing cookbook README.md' unless File.exist? "#{@config.workspace}/README.md"
+      fail 'ERROR: Missing cookbook metadata.rb' unless File.exist? "#{@config.workspace}/metadata.rb"
+      fail 'ERROR: Missing cookbook README.md' unless File.exist? "#{@config.workspace}/README.md"
     end
 
     def write_knife_rb # rubocop:disable AbcSize
