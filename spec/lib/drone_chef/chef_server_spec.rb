@@ -272,6 +272,17 @@ describe DroneChef::ChefServer do
         allow(knife_upload_shellout).to receive(:error?).and_return true
         expect { server.upload }.to raise_error('ERROR: knife upload failed')
       end
+
+      it 'does not give debug logs' do
+        allow(config).to receive(:debug?).and_return true
+        server.upload
+        expect($stdout.string).to match(/DEBUG/)
+      end
+
+      it 'does debug logs' do
+        server.upload
+        expect($stdout.string).not_to match(/DEBUG/)
+      end
     end
   end
 end
