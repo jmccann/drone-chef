@@ -10,7 +10,7 @@ module DroneChef
     def initialize(config)
       @config = config
       @options = config.plugin_args
-      fail 'Chef organization required' unless @options.key? 'org'
+      fail 'ERROR: Chef organization required' unless @options.key? 'org'
     end
 
     def recursive
@@ -95,7 +95,7 @@ module DroneChef
       cmd = Mixlib::ShellOut.new("berks install -b #{@config.workspace}/Berksfile")
       cmd.run_command
 
-      fail 'Failed to retrieve cookbooks' if cmd.error?
+      fail 'ERROR: Failed to retrieve cookbooks' if cmd.error?
     end
 
     #
@@ -133,7 +133,7 @@ module DroneChef
       cmd.run_command
 
       puts "DEBUG: knife upload stdout: #{cmd.stdout}" if @config.debug?
-      fail 'knife upload failed' if cmd.error?
+      fail 'ERROR: knife upload failed' if cmd.error?
     end
 
     def process_last_status
