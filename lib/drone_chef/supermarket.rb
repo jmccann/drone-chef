@@ -19,6 +19,7 @@ module DroneChef
            "already uploaded to #{@config.server}" if uploaded?
       return if uploaded?
       fail 'ERROR: Failed to upload cookbook' unless upload_command
+      puts "INFO: Finished uploading #{cookbook.name}@#{cookbook.version} to #{@config.server}"
     end
 
     def write_configs
@@ -72,6 +73,7 @@ module DroneChef
         command << "-c #{@config.knife_rb}"
         cmd = Mixlib::ShellOut.new(command.join(' '))
         cmd.run_command
+        puts "DEBUG: knife supermarket share stdout:\n#{cmd.stdout}" if @config.debug?
         !cmd.error?
       end
     end
