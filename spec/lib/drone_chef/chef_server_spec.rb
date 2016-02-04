@@ -259,6 +259,19 @@ describe DroneChef::ChefServer do
         allow(berks_install_shellout).to receive(:error?).and_return true
         expect { server.upload }.to raise_error('ERROR: Failed to retrieve cookbooks')
       end
+
+      it 'logs failure of uploading cookbooks' do
+        allow(berks_upload_shellout).to receive(:error?).and_return true
+        expect { server.upload }.to raise_error('ERROR: Failed to upload cookbook')
+      end
+
+      it 'logs failure of uploading chef org data' do
+        allow(server).to receive(:cookbook?).and_return(false)
+        allow(server).to receive(:chef_data?).and_return(true)
+        allow(Dir).to receive(:chdir).with('/path/to/project')
+        allow(knife_upload_shellout).to receive(:error?).and_return true
+        expect { server.upload }.to raise_error('ERROR: knife upload failed')
+      end
     end
   end
 end
