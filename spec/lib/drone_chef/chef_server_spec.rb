@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'drone_chef/config'
 require 'drone_chef/chef_server'
+require 'stringio'
 
 describe DroneChef::ChefServer do
   let(:server) { DroneChef::ChefServer.new config }
@@ -38,12 +39,8 @@ describe DroneChef::ChefServer do
   end
 
   before do
-    @original_stderr = $stderr
-    @original_stdout = $stdout
-
-    # Redirect stderr and stdout
-    $stderr = File.open(File::NULL, 'w')
-    $stdout = File.open(File::NULL, 'w')
+    $stdout = StringIO.new
+    $stderr = StringIO.new
 
     allow(File).to receive(:exist?).and_call_original
     allow(Dir).to receive(:exist?).and_call_original
@@ -61,8 +58,8 @@ describe DroneChef::ChefServer do
   end
 
   after do
-    $stderr = @original_stderr
-    $stdout = @original_stdout
+    $stdout = STDOUT
+    $stderr = STDERR
   end
 
   describe '#recursive' do
