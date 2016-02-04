@@ -78,7 +78,7 @@ module DroneChef
     # Verify necessary data was provided
     #
     def verify_reqs
-      puts 'Verifying required arguments'
+      puts 'INFO: Verifying required arguments'
       fail 'No build data found' if @plugin_args.nil?
       fail 'Username required' unless @plugin_args.key? 'user'
       fail 'Key required' unless @plugin_args.key? 'key'
@@ -86,7 +86,7 @@ module DroneChef
     end
 
     def write_key
-      puts 'Writing temp key'
+      puts 'INFO: Writing temp key'
       File.open(key_path, 'w') do |f|
         f.write key
       end
