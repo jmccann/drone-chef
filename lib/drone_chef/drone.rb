@@ -19,7 +19,20 @@ module DroneChef
       @data['vargs']
     end
 
+    def boolean?(arg)
+      !!arg == arg # rubocop:disable DoubleNegation
+    end
+
+    def debug?
+      return false unless boolean?(@data['vargs']['debug']) || env_debug?
+      @data['vargs']['debug'] || env_debug?
+    end
+
     private
+
+    def env_debug?
+      ENV['DEBUG'] == 'true'
+    end
 
     def netrc
       @data['workspace']['netrc']

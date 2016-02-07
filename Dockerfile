@@ -11,6 +11,7 @@ RUN apk update && \
     libffi-dev \
     bash && \
   gem install --no-ri --no-rdoc \
+    mixlib-shellout \
     chef \
     berkshelf \
     knife-supermarket && \

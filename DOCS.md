@@ -1,4 +1,4 @@
-Use the chef plugin to deploy cookbooks to a Chef server.
+Drone plugin for deploying cookbooks to a Chef Server or Supermarket.
 
 Global Parameters
 =================
@@ -41,5 +41,5 @@ deploy:
     type: server
     org: my_org
     freeze: true
-    ssl_verify_mode: false
+    ssl_verify: false
 ```

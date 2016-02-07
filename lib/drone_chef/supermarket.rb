@@ -1,5 +1,6 @@
 require 'pathname'
 require 'fileutils'
+require 'mixlib/shellout'
 
 module DroneChef
   #
@@ -12,12 +13,13 @@ module DroneChef
     end
 
     def upload # rubocop:disable AbcSize
-      puts "Checking if #{cookbook.name}@#{cookbook.version} " \
+      puts "INFO: Checking if #{cookbook.name}@#{cookbook.version} " \
            "is already shared to #{@config.server}"
-      puts "Cookbook #{cookbook.name} version #{cookbook.version} " \
+      puts "INFO: Cookbook #{cookbook.name} version #{cookbook.version} " \
            "already uploaded to #{@config.server}" if uploaded?
       return if uploaded?
-      fail 'Failed to upload cookbook' unless upload_command
+      fail 'ERROR: Failed to upload cookbook' unless upload_command
+      puts "INFO: Finished uploading #{cookbook.name}@#{cookbook.version} to #{@config.server}"
     end
 
     def write_configs
@@ -28,8 +30,8 @@ module DroneChef
     private
 
     def verify_reqs
-      fail 'Missing cookbook metadata.rb' unless File.exist? "#{@config.workspace}/metadata.rb"
-      fail 'Missing cookbook README.md' unless File.exist? "#{@config.workspace}/README.md"
+      fail 'ERROR: Missing cookbook metadata.rb' unless File.exist? "#{@config.workspace}/metadata.rb"
+      fail 'ERROR: Missing cookbook README.md' unless File.exist? "#{@config.workspace}/README.md"
     end
 
     def write_knife_rb # rubocop:disable AbcSize
@@ -43,10 +45,6 @@ module DroneChef
       end
     end
 
-    def process_last_status
-      $?
-    end
-
     def cookbook
       @metadata ||= begin
         metadata = Chef::Cookbook::Metadata.new
@@ -55,11 +53,14 @@ module DroneChef
       end
     end
 
-    def upload_command
+    def upload_command # rubocop:disable AbcSize
       command = ["knife supermarket share #{cookbook.name}"]
       command << "-c #{@config.knife_rb}"
-      puts `#{command.join(' ')}`
-      process_last_status.success?
+      cmd = Mixlib::ShellOut.new(command.join(' '))
+      cmd.run_command
+      puts "DEBUG: knife supermarket share stdout: #{cmd.stdout}" if @config.debug?
+      puts "ERROR: knife supermarket share stderr: #{cmd.stderr}" if cmd.error?
+      !cmd.error?
     end
 
     def uploaded?
@@ -70,8 +71,10 @@ module DroneChef
       @cookbook_uploaded ||= begin
         command = ["knife supermarket show #{cookbook.name} #{cookbook.version}"]
         command << "-c #{@config.knife_rb}"
-        `#{command.join(' ')}`
-        process_last_status.success?
+        cmd = Mixlib::ShellOut.new(command.join(' '))
+        cmd.run_command
+        puts "DEBUG: knife supermarket share stdout:\n#{cmd.stdout}" if @config.debug?
+        !cmd.error?
       end
     end
   end
