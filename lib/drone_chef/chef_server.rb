@@ -7,9 +7,9 @@ module DroneChef
   # Class for uploading stuff to a Chef Server
   #
   class ChefServer
-    def initialize(config)
-      @config = config
-      @options = config.plugin_args
+    def initialize(build_json)
+      @config = DroneChef::Config.new build_json
+      @options = @config.plugin_args
       fail 'ERROR: Chef organization required' unless @options.key? 'org'
     end
 

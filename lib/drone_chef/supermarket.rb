@@ -7,8 +7,8 @@ module DroneChef
   # Class for uploading stuff to a Supermarket
   #
   class Supermarket
-    def initialize(config)
-      @config = config
+    def initialize(build_json)
+      @config = DroneChef::Config.new build_json
       verify_reqs
     end
 

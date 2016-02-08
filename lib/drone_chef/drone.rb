@@ -7,8 +7,8 @@ module DroneChef
   class Drone
     attr_reader :data
 
-    def initialize(data)
-      @data = JSON.parse data
+    def initialize(build_json)
+      @data = JSON.parse build_json
     end
 
     def write_configs

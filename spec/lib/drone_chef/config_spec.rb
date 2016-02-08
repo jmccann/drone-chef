@@ -3,8 +3,8 @@ require 'drone_chef/drone'
 require 'drone_chef/config'
 
 describe DroneChef::Config do
-  let(:config) { DroneChef::Config.new drone }
-  let(:drone) { DroneChef::Drone.new build_data.to_json }
+  let(:config) { DroneChef::Config.new build_data.to_json }
+  let(:drone) { config.instance_variable_get(:@drone) }
   let(:build_data) do
     {
       'workspace' => {

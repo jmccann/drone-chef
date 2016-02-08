@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'drone_chef/drone'
 
 module DroneChef
   #
@@ -7,9 +8,9 @@ module DroneChef
   class Config
     attr_reader :plugin_args
 
-    def initialize(drone)
-      @drone = drone
-      @plugin_args = drone.plugin_args
+    def initialize(build_json)
+      @drone = DroneChef::Drone.new build_json
+      @plugin_args = @drone.plugin_args
       verify_reqs
     end
 

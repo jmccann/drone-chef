@@ -4,25 +4,32 @@ require 'drone_chef/chef_server'
 require 'stringio'
 
 describe DroneChef::ChefServer do
-  let(:server) { DroneChef::ChefServer.new config }
-  let(:config) do
-    instance_double('DroneChef::Config', plugin_args: plugin_args, workspace: '/path/to/project',
-                                         write_configs: nil, ssl_verify: false,
-                                         knife_rb: '/root/.chef/knife.rb', user: 'johndoe',
-                                         key_path: '/tmp/key.pem', server: 'https://myserver.com',
-                                         ssl_verify_mode: ':verify_none', debug?: false)
-  end
-
-  let(:plugin_args) do
+  let(:server) { DroneChef::ChefServer.new build_data.to_json }
+  let(:config) { server.instance_variable_get(:@config) }
+  let(:build_data) do
     {
-      'org' => 'my_chef_org',
-      'recursive' => false,
-      'freeze' => false
+      'workspace' => {
+        'path' => '/path/to/project',
+        'netrc' => {
+          'machine' => 'the_machine',
+          'login' => 'johndoe',
+          'password' => 'test123'
+        }
+      },
+      'vargs' => {
+        'server' => 'https://myserver.com',
+        'user' => 'johndoe',
+        'key' => 'PEMDATAHERE',
+        'ssl_verify' => false,
+        'org' => 'my_chef_org',
+        'recursive' => false,
+        'freeze' => false
+      }
     }
   end
   let(:file) { double('File') }
   let(:cookbook) do
-    instance_double('Chef::Cookbook::Metadata', name: 'test_cookbook', version: '1.2.3')
+    instance_double('Chef::Cookbook::Metadata', name: 'test_cookbook', version: '1.2.3', from_file: nil)
   end
 
   let(:berks_install_shellout) do
@@ -41,6 +48,8 @@ describe DroneChef::ChefServer do
   before do
     $stdout = StringIO.new
     $stderr = StringIO.new
+
+    allow(Dir).to receive(:home).and_return '/root'
 
     allow(File).to receive(:exist?).and_call_original
     allow(Dir).to receive(:exist?).and_call_original
@@ -64,7 +73,7 @@ describe DroneChef::ChefServer do
 
   describe '#recursive' do
     it 'returns the default if not provided' do
-      plugin_args.delete 'recursive'
+      build_data['vargs'].delete 'recursive'
       expect(server.recursive).to eq true
     end
 
@@ -75,7 +84,7 @@ describe DroneChef::ChefServer do
 
   describe '#freeze' do
     it 'returns the default if not provided' do
-      plugin_args.delete 'freeze'
+      build_data['vargs'].delete 'freeze'
       expect(server.freeze).to eq true
     end
 
@@ -118,9 +127,9 @@ describe DroneChef::ChefServer do
 
   describe '#write_configs' do
     before do
-      allow(Dir).to receive(:home).and_return('/root')
       allow(FileUtils).to receive(:mkdir_p).with '/root/.chef'
       allow(FileUtils).to receive(:mkdir_p).with '/root/.berkshelf'
+      allow(config).to receive(:write_configs)
     end
 
     it 'writes common conigs' do
@@ -167,11 +176,12 @@ describe DroneChef::ChefServer do
   describe '#upload' do
     before do
       # Set normal defaults
-      plugin_args.delete 'freeze'
-      plugin_args.delete 'recursive'
+      build_data['vargs'].delete 'freeze'
+      build_data['vargs'].delete 'recursive'
 
-      allow(server).to receive(:cookbook).and_return(cookbook)
-      allow(server).to receive(:berksfile?).and_return(true)
+      allow(Chef::Cookbook::Metadata).to receive(:new).and_return cookbook
+      allow(File).to receive(:exist?).with(/Berksfile/).and_return true
+
       allow(Dir).to receive(:exist?)
         .with('/path/to/project/{roles,environments,data_bags}')
         .and_return(['/path/to/project/roles'])
@@ -189,7 +199,7 @@ describe DroneChef::ChefServer do
     end
 
     it 'uploads a cookbook to chef server' do
-      plugin_args['recursive'] = false
+      build_data['vargs']['recursive'] = false
 
       expect(Mixlib::ShellOut)
         .to receive(:new).with('berks upload test_cookbook -b /path/to/project/Berksfile')
@@ -199,7 +209,7 @@ describe DroneChef::ChefServer do
     end
 
     it 'does not freeze cookbooks uploaded to chef server' do
-      plugin_args['freeze'] = false
+      build_data['vargs']['freeze'] = false
 
       expect(Mixlib::ShellOut)
         .to receive(:new).with('berks upload -b /path/to/project/Berksfile --no-freeze')
