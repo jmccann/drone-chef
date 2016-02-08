@@ -41,4 +41,68 @@ describe DroneChef::Drone do
       expect(drone.plugin_args).to eq build_data['vargs']
     end
   end
+
+  describe '#debug?' do
+    subject { drone.debug? }
+
+    before do
+      ENV['DEBUG'] = nil
+    end
+
+    context 'environment is true and build is true' do
+      before do
+        ENV['DEBUG'] = 'true'
+        build_data['vargs']['debug'] = true
+      end
+
+      it { is_expected.to eq true }
+    end
+
+    context 'environment is false and build is false' do
+      before do
+        ENV['DEBUG'] = 'false'
+        build_data['vargs']['debug'] = false
+      end
+
+      it { is_expected.to eq false }
+    end
+
+    context 'environment is true and build is false' do
+      before do
+        ENV['DEBUG'] = 'true'
+        build_data['vargs']['debug'] = false
+      end
+
+      it { is_expected.to eq true }
+    end
+
+    context 'environment is false and build is true' do
+      before do
+        ENV['DEBUG'] = 'false'
+        build_data['vargs']['debug'] = true
+      end
+
+      it { is_expected.to eq true }
+    end
+
+    context 'environment is nil and build is nil' do
+      it { is_expected.to eq false }
+    end
+
+    context 'environment is nil and build is true' do
+      before do
+        build_data['vargs']['debug'] = true
+      end
+
+      it { is_expected.to eq true }
+    end
+
+    context 'environment is nil and build is false' do
+      before do
+        build_data['vargs']['debug'] = false
+      end
+
+      it { is_expected.to eq false }
+    end
+  end
 end
