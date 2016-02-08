@@ -1,5 +1,4 @@
 require 'fileutils'
-require 'drone_chef/drone'
 
 module DroneChef
   #
@@ -9,13 +8,31 @@ module DroneChef
     attr_reader :plugin_args
 
     def initialize(build_json)
-      @drone = DroneChef::Drone.new build_json
-      @plugin_args = @drone.plugin_args
+      @data = JSON.parse build_json
+      @plugin_args = @data['vargs']
       verify_reqs
     end
 
+    def write_configs
+      write_netrc
+      write_key
+    end
+
+    def plugin_args
+      @data['vargs']
+    end
+
+    def boolean?(arg)
+      !!arg == arg # rubocop:disable DoubleNegation
+    end
+
+    def debug?
+      return false unless boolean?(@data['vargs']['debug']) || env_debug?
+      @data['vargs']['debug'] || env_debug?
+    end
+
     def workspace
-      @drone.data['workspace']['path']
+      @data['workspace']['path']
     end
 
     def server
@@ -42,17 +59,8 @@ module DroneChef
       ssl_verify ? ':verify_peer' : ':verify_none'
     end
 
-    def write_configs
-      @drone.write_configs
-      write_key
-    end
-
     def knife_rb
       "#{Dir.home}/.chef/knife.rb"
-    end
-
-    def debug?
-      @drone.debug?
     end
 
     private
@@ -90,6 +98,22 @@ module DroneChef
       puts 'INFO: Writing temp key'
       File.open(key_path, 'w') do |f|
         f.write key
+      end
+    end
+
+    def env_debug?
+      ENV['DEBUG'] == 'true'
+    end
+
+    def netrc
+      @data['workspace']['netrc']
+    end
+
+    def write_netrc
+      File.open("#{Dir.home}/.netrc", 'w') do |f|
+        f.puts "machine #{netrc['machine']}"
+        f.puts "  login #{netrc['login']}"
+        f.puts "  password #{netrc['password']}"
       end
     end
   end
