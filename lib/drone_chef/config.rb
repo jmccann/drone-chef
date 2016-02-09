@@ -17,10 +17,6 @@ module DroneChef
       write_key
     end
 
-    def plugin_args
-      @data['vargs']
-    end
-
     def boolean?(arg)
       !!arg == arg # rubocop:disable DoubleNegation
     end
