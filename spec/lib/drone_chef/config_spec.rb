@@ -98,12 +98,6 @@ describe DroneChef::Config do
   end
 
   describe '#write_configs' do
-    # it 'writes netrc' do
-    #   allow(config).to receive(:write_key)
-    #   expect(config).to receive(:write_netrc)
-    #   config.write_configs
-    # end
-
     it 'writes .netrc file' do
       allow(config).to receive(:write_key)
       expect(File).to receive(:open).with('/root/.netrc', 'w').and_yield(file)
