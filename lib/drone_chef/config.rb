@@ -5,11 +5,10 @@ module DroneChef
   # Plugin configuration
   #
   class Config
-    attr_reader :plugin_args
+    attr_reader :data
 
     def initialize(build_json)
       @data = JSON.parse build_json
-      @plugin_args = @data['vargs']
       verify_reqs
     end
 
@@ -36,7 +35,7 @@ module DroneChef
     end
 
     def server
-      @plugin_args['server']
+      @data['vargs']['server']
     end
 
     def type
@@ -44,7 +43,7 @@ module DroneChef
     end
 
     def user
-      @plugin_args['user']
+      @data['vargs']['user']
     end
 
     def key_path
@@ -71,16 +70,16 @@ module DroneChef
     # @param key [String] The key to check a value for
     # @param default_value The default value to return if none provided
     #
-    # @return Returns the value provided in @plugin_args[key] if provided,
+    # @return Returns the value provided in @data['vargs'][key] if provided,
     #   else returns default_value
     #
     def set_default(key, default_value)
-      return default_value unless @plugin_args.key? key.to_s
-      @plugin_args[key.to_s]
+      return default_value unless @data['vargs'].key? key.to_s
+      @data['vargs'][key.to_s]
     end
 
     def key
-      @plugin_args['key']
+      @data['vargs']['key']
     end
 
     #
@@ -88,10 +87,10 @@ module DroneChef
     #
     def verify_reqs
       puts 'INFO: Verifying required arguments'
-      fail 'No build data found' if @plugin_args.nil?
-      fail 'Username required' unless @plugin_args.key? 'user'
-      fail 'Key required' unless @plugin_args.key? 'key'
-      fail 'Server URL required' unless @plugin_args.key? 'server'
+      fail 'No build data found' if @data['vargs'].nil?
+      fail 'Username required' unless @data['vargs'].key? 'user'
+      fail 'Key required' unless @data['vargs'].key? 'key'
+      fail 'Server URL required' unless @data['vargs'].key? 'server'
     end
 
     def write_key

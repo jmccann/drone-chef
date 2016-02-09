@@ -9,8 +9,7 @@ module DroneChef
   class ChefServer
     def initialize(build_json)
       @config = DroneChef::Config.new build_json
-      @options = @config.plugin_args
-      fail 'ERROR: Chef organization required' unless @options.key? 'org'
+      fail 'ERROR: Chef organization required' unless @config.data['vargs'].key? 'org'
     end
 
     def recursive
@@ -57,16 +56,16 @@ module DroneChef
     # @param key [String] The key to check a value for
     # @param default_value The default value to return if none provided
     #
-    # @return Returns the value provided in @options[key] if provided,
+    # @return Returns the value provided in @config.data['vargs'][key] if provided,
     #   else returns default_value
     #
     def set_default(key, default_value)
-      return default_value unless @options.key? key.to_s
-      @options[key.to_s]
+      return default_value unless @config.data['vargs'].key? key.to_s
+      @config.data['vargs'][key.to_s]
     end
 
     def url
-      "#{@config.server}/organizations/#{@options['org']}"
+      "#{@config.server}/organizations/#{@config.data['vargs']['org']}"
     end
 
     def write_knife_rb
