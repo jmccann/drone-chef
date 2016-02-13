@@ -1,10 +1,8 @@
 require 'spec_helper'
-require 'drone_chef/drone'
 require 'drone_chef/config'
 
 describe DroneChef::Config do
-  let(:config) { DroneChef::Config.new drone }
-  let(:drone) { DroneChef::Drone.new build_data.to_json }
+  let(:config) { DroneChef::Config.new build_data.to_json }
   let(:build_data) do
     {
       'workspace' => {
@@ -33,6 +31,8 @@ describe DroneChef::Config do
     # Redirect stderr and stdout
     $stderr = File.open(File::NULL, 'w')
     $stdout = File.open(File::NULL, 'w')
+
+    allow(Dir).to receive(:home).and_return '/root'
   end
 
   after do
@@ -98,17 +98,84 @@ describe DroneChef::Config do
   end
 
   describe '#write_configs' do
-    it 'writes netrc' do
+    it 'writes .netrc file' do
       allow(config).to receive(:write_key)
-      expect(drone).to receive(:write_configs)
+      expect(File).to receive(:open).with('/root/.netrc', 'w').and_yield(file)
+      expect(file).to receive(:puts).with('machine the_machine')
+      expect(file).to receive(:puts).with('  login johndoe')
+      expect(file).to receive(:puts).with('  password test123')
       config.write_configs
     end
 
     it 'writes key file' do
-      allow(drone).to receive(:write_configs)
+      allow(config).to receive(:write_netrc)
       expect(File).to receive(:open).with('/tmp/key.pem', 'w').and_yield(file)
       expect(file).to receive(:write).with('PEMDATAHERE')
       config.write_configs
+    end
+  end
+
+  describe '#debug?' do
+    subject { config.debug? }
+
+    before do
+      ENV['DEBUG'] = nil
+    end
+
+    context 'environment is true and build is true' do
+      before do
+        ENV['DEBUG'] = 'true'
+        build_data['vargs']['debug'] = true
+      end
+
+      it { is_expected.to eq true }
+    end
+
+    context 'environment is false and build is false' do
+      before do
+        ENV['DEBUG'] = 'false'
+        build_data['vargs']['debug'] = false
+      end
+
+      it { is_expected.to eq false }
+    end
+
+    context 'environment is true and build is false' do
+      before do
+        ENV['DEBUG'] = 'true'
+        build_data['vargs']['debug'] = false
+      end
+
+      it { is_expected.to eq true }
+    end
+
+    context 'environment is false and build is true' do
+      before do
+        ENV['DEBUG'] = 'false'
+        build_data['vargs']['debug'] = true
+      end
+
+      it { is_expected.to eq true }
+    end
+
+    context 'environment is nil and build is nil' do
+      it { is_expected.to eq false }
+    end
+
+    context 'environment is nil and build is true' do
+      before do
+        build_data['vargs']['debug'] = true
+      end
+
+      it { is_expected.to eq true }
+    end
+
+    context 'environment is nil and build is false' do
+      before do
+        build_data['vargs']['debug'] = false
+      end
+
+      it { is_expected.to eq false }
     end
   end
 end

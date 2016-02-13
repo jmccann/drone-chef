@@ -5,14 +5,25 @@ require 'drone_chef/supermarket'
 require 'stringio'
 
 describe DroneChef::Supermarket do
-  let(:server) { DroneChef::Supermarket.new config }
-  let(:config) do
-    instance_double('DroneChef::Config', workspace: '/path/to/project',
-                                         write_configs: nil, ssl_verify: false,
-                                         knife_rb: '/root/.chef/knife.rb',
-                                         server: 'https://myserver.com', user: 'johndoe',
-                                         key_path: '/tmp/key.pem', ssl_verify_mode: ':verify_none',
-                                         debug?: false)
+  let(:server) { DroneChef::Supermarket.new build_data.to_json }
+  let(:config) { server.instance_variable_get(:@config) }
+  let(:build_data) do
+    {
+      'workspace' => {
+        'path' => '/path/to/project',
+        'netrc' => {
+          'machine' => 'the_machine',
+          'login' => 'johndoe',
+          'password' => 'test123'
+        }
+      },
+      'vargs' => {
+        'server' => 'https://myserver.com',
+        'user' => 'johndoe',
+        'key' => 'PEMDATAHERE',
+        'ssl_verify' => false
+      }
+    }
   end
   let(:file) { double('File') }
   let(:cookbook) do
@@ -21,7 +32,8 @@ describe DroneChef::Supermarket do
 
   let(:knife_show_shellout) do
     double('knife supermarket show test_cookbook',
-           run_command: nil, stdout: 'Good output', stderr: 'ERROR: The object you are looking for could not be found', error?: false)
+           run_command: nil, stdout: 'Good output',
+           stderr: 'ERROR: The object you are looking for could not be found', error?: false)
   end
   let(:knife_share_shellout) do
     double('knife supermarket share test_cookbook',
@@ -31,6 +43,8 @@ describe DroneChef::Supermarket do
   before do
     $stdout = StringIO.new
     $stderr = StringIO.new
+
+    allow(Dir).to receive(:home).and_return '/root'
 
     allow(File).to receive(:exist?).and_call_original
     allow(File).to receive(:exist?).with('/path/to/project/metadata.rb').and_return(true)
@@ -115,6 +129,7 @@ describe DroneChef::Supermarket do
     end
 
     it 'writes knife config' do
+      allow(config).to receive(:write_configs)
       expect(FileUtils).to receive(:mkdir_p).with '/root/.chef'
       expect(File).to receive(:open).with('/root/.chef/knife.rb', 'w').and_yield(file)
       expect(file).to receive(:puts).with("node_name 'johndoe'")

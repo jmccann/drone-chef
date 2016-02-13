@@ -3,17 +3,18 @@
 $LOAD_PATH.unshift('/opt/drone-chef/lib') if Dir.exist? '/opt/drone-chef/lib'
 
 require 'drone_chef'
+require 'json'
 
-drone_data = DroneChef::Drone.new ARGV[1]
-config = DroneChef::Config.new drone_data
+build_data = JSON.parse ARGV[1]
+type = build_data['vargs']['type'] || 'supermarket'
 
-case config.type
+case type
 when 'supermarket'
-  server = DroneChef::Supermarket.new config
+  server = DroneChef::Supermarket.new ARGV[1]
 when 'server'
-  server = DroneChef::ChefServer.new config
+  server = DroneChef::ChefServer.new ARGV[1]
 else
-  fail "Invalid type '#{config.type}' specified"
+  fail "Invalid type '#{type}' specified"
 end
 
 server.write_configs
