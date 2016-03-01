@@ -1,9 +1,9 @@
-require 'spec_helper'
-require 'drone_chef/config'
-require 'drone_chef/chef_server'
-require 'stringio'
+require "spec_helper"
 
-describe DroneChef::ChefServer do
+describe Drone::Chef::Processor do
+
+
+
   let(:server) { DroneChef::ChefServer.new build_data.to_json }
   let(:config) { server.instance_variable_get(:@config) }
   let(:build_data) do
@@ -295,4 +295,7 @@ describe DroneChef::ChefServer do
       end
     end
   end
+
+
+  
 end

@@ -1,7 +1,9 @@
-require 'spec_helper'
-require 'drone_chef/config'
+require "spec_helper"
 
-describe DroneChef::Config do
+describe Drone::Chef::Config do
+
+
+
   let(:config) { DroneChef::Config.new build_data.to_json }
   let(:build_data) do
     {
@@ -178,4 +180,7 @@ describe DroneChef::Config do
       it { is_expected.to eq false }
     end
   end
+
+
+  
 end

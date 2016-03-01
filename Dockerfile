@@ -11,16 +11,26 @@ RUN apk update && \
     libffi-dev \
     bash && \
   gem install --no-ri --no-rdoc \
+    droneio \
+    --version '~> 1.0' && \
+  gem install --no-ri --no-rdoc \
     mixlib-shellout \
+    --version '~> 2.2' && \
+  gem install --no-ri --no-rdoc \
     chef \
+    --version '~> 12.7' && \
+  gem install --no-ri --no-rdoc \
     berkshelf \
-    knife-supermarket && \
+    --version '~> 4.2' && \
   apk del \
     bash \
     libffi-dev \
-    perl \
-    build-base && \
+    perl && \
   rm -rf /var/cache/apk/*
 
-ADD . /opt/drone-chef/
-ENTRYPOINT ["/opt/drone-chef/bin/drone-chef"]
+COPY pkg/drone-chef-0.0.0.gem /tmp/
+
+RUN gem install --no-ri --no-rdoc --local \
+  /tmp/drone-chef-0.0.0.gem
+
+ENTRYPOINT ["/usr/bin/drone-chef"]
