@@ -43,19 +43,6 @@ module Drone
       end
 
       #
-      # Type of server to upload to
-      #
-      # @return [String]
-      #
-      def type
-        if vargs.type.nil?
-          "supermarket"
-        else
-          vargs.type
-        end
-      end
-
-      #
       # Knife flag for enabling/disabling SSL verify
       #
       # @return [String]
