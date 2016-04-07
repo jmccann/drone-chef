@@ -1,4 +1,5 @@
 require "pathname"
+require "active_support/core_ext/module"
 
 module Drone
   class Chef
@@ -10,7 +11,7 @@ module Drone
 
       delegate(
         :vargs,
-        :workspace
+        :workspace,
         to: :payload
       )
 
