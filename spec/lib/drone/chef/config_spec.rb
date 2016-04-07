@@ -38,6 +38,21 @@ describe Drone::Chef::Config do
       expect { config.validate! }.to raise_error "No plugin data found"
     end
 
+    it "fails if no user provided" do
+      build_data["vargs"].delete "user"
+      expect { config.validate! }.to raise_error "Please provide a username"
+    end
+
+    it "fails if no private_key is provided" do
+      build_data["vargs"].delete "private_key"
+      expect { config.validate! }.to raise_error "Please provide a private key"
+    end
+
+    it "fails if no server URL is provided" do
+      build_data["vargs"].delete "server"
+      expect { config.validate! }.to raise_error "Please provide a server URL"
+    end
+
     it "does not throw an error if validation passes" do
       expect { config.validate! }.not_to raise_error
     end

@@ -38,7 +38,7 @@ module Drone
         raise "No plugin data found" if vargs.empty?
 
         raise "Please provide a username" if user.nil?
-        raise "Please provide a key" if private_key.nil?
+        raise "Please provide a private key" if private_key.nil?
         raise "Please provide a server URL" if server.nil?
       end
 
