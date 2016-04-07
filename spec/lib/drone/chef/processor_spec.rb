@@ -17,7 +17,7 @@ describe Drone::Chef::Processor do
       "vargs" => {
         "server" => "https://myserver.com",
         "user" => "johndoe",
-        "key" => "PEMDATAHERE",
+        "private_key" => "PEMDATAHERE",
         "ssl_verify" => false,
         "org" => "my_chef_org",
         "recursive" => false,

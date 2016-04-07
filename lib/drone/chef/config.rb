@@ -12,7 +12,7 @@ module Drone
 
       delegate [:vargs, :workspace] => :payload,
                [:netrc] => :workspace,
-               [:user, :key, :server, :org] => :vargs
+               [:user, :private_key, :server, :org, :ssl_verify] => :vargs
 
       #
       # Initialize an instance
@@ -39,10 +39,10 @@ module Drone
       # @raise RuntimeError
       #
       def validate!
-        raise "No plugin data found" if vargs.nil?
+        raise "No plugin data found" if vargs.empty?
 
         raise "Please provide a username" if user.nil?
-        raise "Please provide a key" if key.nil?
+        raise "Please provide a key" if private_key.nil?
         raise "Please provide a server URL" if server.nil?
       end
 

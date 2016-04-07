@@ -5,4 +5,5 @@ group :development do
   gem "guard", require: false
   gem "guard-rubocop", require: false
   gem "guard-rspec", require: false
+  gem "pry"
 end
