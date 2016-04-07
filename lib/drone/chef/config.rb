@@ -21,10 +21,6 @@ module Drone
         self.payload = payload
       end
 
-
-
-
-
       #
       # Write config files to filesystem
       #
