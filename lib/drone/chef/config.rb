@@ -1,5 +1,4 @@
 require "pathname"
-require "active_support/core_ext/module"
 
 module Drone
   class Chef
@@ -7,26 +6,13 @@ module Drone
     # Chef plugin configuration
     #
     class Config
+      extend Forwardable
+
       attr_accessor :payload
 
-      delegate(
-        :vargs,
-        :workspace,
-        to: :payload
-      )
-
-      delegate(
-        :netrc,
-        to: :workspace
-      )
-
-      delegate(
-        :user,
-        :key,
-        :server,
-        :org,
-        to: :vargs
-      )
+      delegate [:vargs, :workspace] => :payload,
+               [:netrc] => :workspace,
+               [:user, :key, :server, :org] => :vargs
 
       #
       # Initialize an instance

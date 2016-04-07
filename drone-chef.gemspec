@@ -37,7 +37,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rubocop"
 
   # Keep the versions in sync with the Dockerfile
-  s.add_runtime_dependency "activesupport", "~> 4.2"
   s.add_runtime_dependency "droneio", "~> 1.0"
   s.add_runtime_dependency "mixlib-shellout", "~> 2.2"
   s.add_runtime_dependency "chef", "~> 12.7"
