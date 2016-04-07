@@ -56,6 +56,9 @@ module Drone
         File.exist? "#{@config.workspace}/metadata.rb"
       end
 
+      #
+      # Is there a Berksfile?
+      #
       def berksfile?
         return true if File.exist? "#{@config.workspace}/Berksfile"
         return true if File.exist? "#{@config.workspace}/Berksfile.lock"
@@ -72,11 +75,12 @@ module Drone
           f.puts "client_key '#{@config.key_path}'"
           f.puts "chef_server_url '#{url}'"
           f.puts "chef_repo_path '#{@config.workspace}'"
-          f.puts "ssl_verify_mode #{@config.ssl_verify_mode}"
+          f.puts "ssl_verify_mode #{@config.ssl_mode}"
         end
       end
 
       def write_berks_config
+        return unless ssl_verify?
         config.berks_config_path.open "w" do |f|
           # config.ssl_verify?
           f.puts '{"ssl":{"verify":false}}'
