@@ -36,6 +36,10 @@ describe Drone::Chef::Config do
     Drone::Chef::Config.new payload
   end
 
+  before do
+    allow(Dir).to receive(:home).and_return "/root"
+  end
+
   describe '#validate!' do
     it "fails if no vargs are provided" do
       build_data.delete "vargs"
@@ -65,7 +69,6 @@ describe Drone::Chef::Config do
   describe '#configure!' do
     it "writes .netrc file" do
       allow(config).to receive(:write_keyfile)
-      allow(Dir).to receive(:home).and_return "/root"
 
       expect(File).to receive(:open).with("/root/.netrc", "w").and_yield(file)
       expect(file).to receive(:puts).with("machine the_machine")
@@ -145,6 +148,22 @@ describe Drone::Chef::Config do
     it "returns false from user" do
       build_data["vargs"]["recursive"] = false
       expect(config.recursive?).to eq false
+    end
+  end
+
+  describe '#knife_config_path' do
+    it "returns the knife config file path" do
+      FakeFS do
+        expect(config.knife_config_path.to_s).to eq "/root/.chef/knife.rb"
+      end
+    end
+
+    it "creates the directory structure if it doesn't exist" do
+      skip "not sure how to test this"
+    end
+
+    it "does not create the directory structure when it exists" do
+      skip "not sure how to test this"
     end
   end
 

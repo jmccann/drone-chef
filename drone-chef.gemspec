@@ -32,9 +32,11 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rake"
   s.add_development_dependency "yard"
   s.add_development_dependency "rspec"
+  s.add_development_dependency "fakefs"
   s.add_development_dependency "simplecov"
   s.add_development_dependency "simplecov-lcov"
   s.add_development_dependency "rubocop"
+  s.add_development_dependency "pry"
 
   # Keep the versions in sync with the Dockerfile
   s.add_runtime_dependency "droneio", "~> 1.0"
