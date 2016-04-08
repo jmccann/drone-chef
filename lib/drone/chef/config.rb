@@ -144,8 +144,6 @@ module Drone
         @berks_config_path
       end
 
-      protected
-
       #
       # The path to write our knife keyfile to
       #
@@ -154,6 +152,8 @@ module Drone
           "/tmp/key.pem"
         )
       end
+
+      protected
 
       #
       # Write a knife keyfile

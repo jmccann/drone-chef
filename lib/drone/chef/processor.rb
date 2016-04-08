@@ -66,21 +66,21 @@ module Drone
       end
 
       def url
-        "#{@config.server}/organizations/#{@config.data["vargs"]["org"]}"
+        "#{@config.server}/organizations/#{@config.vargs["org"]}"
       end
 
       def write_knife_rb
         config.knife_config_path.open "w" do |f|
           f.puts "node_name '#{@config.user}'"
-          f.puts "client_key '#{@config.key_path}'"
+          f.puts "client_key '#{@config.keyfile_path}'"
           f.puts "chef_server_url '#{url}'"
-          f.puts "chef_repo_path '#{@config.workspace}'"
+          f.puts "chef_repo_path '#{@config.workspace.path}'"
           f.puts "ssl_verify_mode #{@config.ssl_mode}"
         end
       end
 
       def write_berks_config
-        return unless ssl_verify?
+        return if config.ssl_verify?
         config.berks_config_path.open "w" do |f|
           # config.ssl_verify?
           f.puts '{"ssl":{"verify":false}}'

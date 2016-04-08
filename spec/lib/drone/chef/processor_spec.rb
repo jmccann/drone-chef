@@ -2,6 +2,7 @@ require "spec_helper"
 require "drone"
 
 describe Drone::Chef::Processor do
+  include FakeFS::SpecHelpers
   # let(:server) { DroneChef::ChefServer.new build_data.to_json }
   # let(:config) { server.instance_variable_get(:@config) }
   let(:build_data) do
@@ -40,6 +41,10 @@ describe Drone::Chef::Processor do
     Drone::Chef::Processor.new config
   end
 
+  before do
+    allow(Dir).to receive(:home).and_return "/root"
+  end
+
   describe '#validate!' do
     it "passes when org is provided" do
       expect { processor.validate! }.not_to raise_error
@@ -49,6 +54,74 @@ describe Drone::Chef::Processor do
       build_data["vargs"]["org"] = nil
       expect { processor.validate! }
         .to raise_error("Please provide an organization")
+    end
+  end
+
+  describe '#configure!' do
+    before do
+      allow(config).to receive(:configure!)
+    end
+
+    it "calls configure from Drone::Chef::Config" do
+      expect(config).to receive(:configure!)
+
+      processor.configure!
+    end
+
+    it "writes berks config file" do
+      FakeFS do
+        processor.configure!
+
+        expect(File.read("/root/.berkshelf/config.json"))
+          .to eq "{\"ssl\":{\"verify\":false}}\n"
+      end
+    end
+
+    context "writes the knife config" do
+      it "includes the username" do
+        FakeFS do
+          processor.configure!
+
+          expect(File.read("/root/.chef/knife.rb"))
+            .to include "node_name 'johndoe'"
+        end
+      end
+
+      it "includes the key file path" do
+        FakeFS do
+          processor.configure!
+
+          expect(File.read("/root/.chef/knife.rb"))
+            .to include "client_key '/tmp/key.pem'"
+        end
+      end
+
+      it "includes the server and org" do
+        FakeFS do
+          processor.configure!
+
+          expect(File.read("/root/.chef/knife.rb"))
+            .to include "chef_server_url 'https://myserver.com/organizations/my_chef_org'" # rubocop:disable LineLength
+        end
+      end
+
+      it "includes the chef_repo_path" do
+        FakeFS do
+          processor.configure!
+
+          expect(File.read("/root/.chef/knife.rb"))
+            .to include "chef_repo_path '/path/to/project'"
+        end
+      end
+
+      it "includes ssl_verify_mode" do
+        FakeFS do
+          processor.configure!
+
+          expect(File.read("/root/.chef/knife.rb"))
+            .to include "ssl_verify_mode :verify_none"
+        end
+      end
     end
   end
 

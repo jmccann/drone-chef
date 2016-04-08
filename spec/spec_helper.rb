@@ -1,4 +1,4 @@
-require "fakefs/safe"
+require "fakefs/spec_helpers"
 require "pry"
 require "simplecov"
 require "simplecov-lcov"
