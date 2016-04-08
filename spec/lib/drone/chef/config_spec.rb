@@ -152,9 +152,25 @@ describe Drone::Chef::Config do
   end
 
   describe '#knife_config_path' do
-    it "returns the knife config file path" do
+    it "returns the file path" do
       FakeFS do
         expect(config.knife_config_path.to_s).to eq "/root/.chef/knife.rb"
+      end
+    end
+
+    it "creates the directory structure if it doesn't exist" do
+      skip "not sure how to test this"
+    end
+
+    it "does not create the directory structure when it exists" do
+      skip "not sure how to test this"
+    end
+  end
+
+  describe '#berks_config_path' do
+    it "returns the file path" do
+      FakeFS do
+        expect(config.berks_config_path.to_s).to eq "/root/.berkshelf/config.json"
       end
     end
 
