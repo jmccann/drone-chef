@@ -108,6 +108,44 @@ module Drone
       end
 
       #
+      # Knife config file location
+      #
+      def knife_config_path
+        @knife_config_path ||= Pathname.new(
+          Dir.home
+        ).join(
+          ".chef",
+          "knife.rb"
+        )
+
+        @knife_config_path.dirname.tap do |dir|
+          dir.mkpath unless dir.directory?
+        end
+
+        @knife_config_path
+      end
+
+      #
+      # Berkshelf config file location
+      #
+      def berks_config_path
+        @berks_config_path ||= Pathname.new(
+          Dir.home
+        ).join(
+          ".berkshelf",
+          "config.json"
+        )
+
+        @berks_config_path.dirname.tap do |dir|
+          dir.mkpath unless dir.directory?
+        end
+
+        @berks_config_path
+      end
+
+      protected
+
+      #
       # The path to write our knife keyfile to
       #
       def keyfile_path
@@ -145,42 +183,6 @@ module Drone
           f.puts "  login #{netrc.login}"
           f.puts "  password #{netrc.password}"
         end
-      end
-
-      #
-      # Knife config file location
-      #
-      def knife_config_path
-        @knife_config_path ||= Pathname.new(
-          Dir.home
-        ).join(
-          ".chef",
-          "knife.rb"
-        )
-
-        @knife_config_path.dirname.tap do |dir|
-          dir.mkpath unless dir.directory?
-        end
-
-        @knife_config_path
-      end
-
-      #
-      # Berkshelf config file location
-      #
-      def berks_config_path
-        @berks_config_path ||= Pathname.new(
-          Dir.home
-        ).join(
-          ".berkshelf",
-          "config.json"
-        )
-
-        @berks_config_path.dirname.tap do |dir|
-          dir.mkpath unless dir.directory?
-        end
-
-        @berks_config_path
       end
     end
   end
