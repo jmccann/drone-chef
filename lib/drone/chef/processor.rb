@@ -53,7 +53,7 @@ module Drone
       # Are we uploading a cookbook?
       #
       def cookbook?
-        File.exist? "#{@config.workspace}/metadata.rb"
+        File.exist? "#{@config.workspace.path}/metadata.rb"
       end
 
       #
@@ -92,7 +92,7 @@ module Drone
       #
       def berks_install
         puts "Retrieving cookbooks"
-        cmd = Mixlib::ShellOut.new("berks install -b #{@config.workspace}/Berksfile")
+        cmd = Mixlib::ShellOut.new("berks install -b #{@config.workspace.path}/Berksfile")
         cmd.run_command
 
         raise "ERROR: Failed to retrieve cookbooks" if cmd.error?
@@ -104,8 +104,8 @@ module Drone
       def berks_upload # rubocop:disable AbcSize
         puts "Running berks upload"
         command = ["berks upload"]
-        command << cookbook.name.to_s unless config.recursive?
-        command << "-b #{@config.workspace}/Berksfile"
+        command << cookbook.name unless config.recursive?
+        command << "-b #{@config.workspace.path}/Berksfile"
         command << "--no-freeze" unless config.freeze?
         cmd = Mixlib::ShellOut.new(command.join(" "))
         cmd.run_command
@@ -115,7 +115,7 @@ module Drone
       end
 
       def chef_data?
-        !Dir.glob("#{@config.workspace}/{roles,environments,data_bags}").empty?
+        !Dir.glob("#{@config.workspace.path}/{roles,environments,data_bags}").empty?
       end
 
       #
@@ -125,9 +125,9 @@ module Drone
         puts "Uploading roles, environments and data bags"
         command = ["knife upload"]
         command << "."
-        command << "-c #{@config.knife_rb}"
+        command << "-c #{@config.knife_config_path}"
 
-        Dir.chdir(@config.workspace)
+        Dir.chdir(@config.workspace.path)
 
         cmd = Mixlib::ShellOut.new(command.join(" "))
         cmd.run_command
@@ -138,8 +138,8 @@ module Drone
 
       def cookbook
         @metadata ||= begin
-          metadata = Chef::Cookbook::Metadata.new
-          metadata.from_file("#{@config.workspace}/metadata.rb")
+          metadata = ::Chef::Cookbook::Metadata.new
+          metadata.from_file("#{@config.workspace.path}/metadata.rb")
           metadata
         end
       end

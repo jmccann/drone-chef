@@ -125,6 +125,144 @@ describe Drone::Chef::Processor do
     end
   end
 
+  describe '#upload!' do
+    let(:cookbook) do
+      instance_double("Chef::Cookbook::Metadata", name: "test_cookbook",
+                                                  version: "1.2.3",
+                                                  from_file: nil)
+    end
+
+    let(:knife_upload_shellout) do
+      double("knife upload", run_command: nil, stdout: "knife_upload_stdout",
+                             stderr: "knife_upload_stderr", error?: false)
+    end
+
+    let(:berks_install_shellout) do
+      double("berks install", run_command: nil, stdout: "berks_install_stdout",
+                              stderr: "berks_install_stderr", error?: false)
+    end
+
+    let(:berks_upload_shellout) do
+      double("berks upload", run_command: nil, stdout: "berks_upload_stdout",
+                             stderr: "berks_upload_stderr", error?: false)
+    end
+
+    before do
+      # Set normal defaults
+      build_data["vargs"].delete "freeze"
+      build_data["vargs"].delete "recursive"
+
+      allow(Chef::Cookbook::Metadata).to receive(:new).and_return cookbook
+      allow(File).to receive(:exist?).with(/Berksfile/).and_return true
+
+      allow(Mixlib::ShellOut)
+        .to receive(:new).with(/berks install/)
+        .and_return(berks_install_shellout)
+      allow(Mixlib::ShellOut)
+        .to receive(:new).with(/berks upload/)
+        .and_return(berks_upload_shellout)
+
+      allow(Dir).to receive(:exist?)
+        .with("/path/to/project/{roles,environments,data_bags}")
+        .and_return(["/path/to/project/roles"])
+      allow(File).to receive(:exist?).with("/path/to/project/metadata.rb")
+        .and_return(true)
+    end
+
+    it "retrieves cookbook and dependency cookbooks" do
+      expect(Mixlib::ShellOut)
+        .to receive(:new).with("berks install -b /path/to/project/Berksfile")
+      processor.upload!
+    end
+
+    it "uploads cookbooks to chef server" do
+      expect(Mixlib::ShellOut)
+        .to receive(:new).with("berks upload -b /path/to/project/Berksfile")
+        .and_return(berks_upload_shellout)
+
+      processor.upload!
+    end
+
+    it "uploads a cookbook to chef server" do
+      build_data["vargs"]["recursive"] = false
+
+      expect(Mixlib::ShellOut)
+        .to receive(:new)
+        .with("berks upload test_cookbook -b /path/to/project/Berksfile")
+        .and_return(berks_upload_shellout)
+      expect(berks_upload_shellout).to receive(:run_command)
+      processor.upload!
+    end
+
+    it "does not freeze cookbooks uploaded to chef server" do
+      build_data["vargs"]["freeze"] = false
+
+      expect(Mixlib::ShellOut)
+        .to receive(:new)
+        .with("berks upload -b /path/to/project/Berksfile --no-freeze")
+        .and_return(berks_upload_shellout)
+      expect(berks_upload_shellout).to receive(:run_command)
+      processor.upload!
+    end
+
+    it "does not upload chef org data from cookbooks" do
+      allow(processor).to receive(:cookbook?).and_return(true)
+      allow(processor).to receive(:chef_data?).and_return(true)
+
+      expect(Mixlib::ShellOut)
+        .not_to receive(:new).with(/knife upload/)
+      processor.upload!
+    end
+
+    context "if not a cookbook" do
+      before do
+        allow(processor).to receive(:cookbook?).and_return(false)
+      end
+
+      it "uploads chef org data only when no cookbooks defined" do
+        allow(processor).to receive(:berksfile?).and_return(false)
+        allow(processor).to receive(:chef_data?).and_return(true)
+
+        expect(processor).not_to receive(:berks_install)
+        expect(processor).not_to receive(:berks_upload)
+        expect(Dir).to receive(:chdir).with("/path/to/project")
+        expect(Mixlib::ShellOut)
+          .to receive(:new).with("knife upload . -c /root/.chef/knife.rb")
+          .and_return(knife_upload_shellout)
+
+        processor.upload!
+      end
+
+      it "uploads chef org data and cookbooks" do
+        allow(File).to receive(:exist?).with("/path/to/project/metadata.rb")
+          .and_return(false)
+        allow(processor).to receive(:berksfile?).and_return(true)
+        allow(processor).to receive(:chef_data?).and_return(true)
+
+        expect(processor).to receive(:berks_install)
+        expect(processor).to receive(:berks_upload)
+        expect(Dir).to receive(:chdir).with("/path/to/project")
+        expect(Mixlib::ShellOut)
+          .to receive(:new).with("knife upload . -c /root/.chef/knife.rb")
+          .and_return(knife_upload_shellout)
+
+        processor.upload!
+      end
+
+      it "does not upload chef org data if non exists" do
+        allow(File).to receive(:exist?).with("/path/to/project/metadata.rb")
+          .and_return(false)
+        allow(processor).to receive(:berksfile?).and_return(false)
+        allow(processor).to receive(:chef_data?).and_return(false)
+
+        expect(Mixlib::ShellOut)
+          .not_to receive(:new).with(/knife upload/)
+
+        processor.upload!
+      end
+    end
+  end
+
   # let(:file) { double('File') }
   # let(:cookbook) do
   #   instance_double('Chef::Cookbook::Metadata', name: 'test_cookbook', version: '1.2.3', from_file: nil)
@@ -288,12 +426,12 @@ describe Drone::Chef::Processor do
   #
   #   it 'retrieves cookbook and dependency cookbooks' do
   #     expect(berks_install_shellout).to receive(:run_command)
-  #     server.upload
+  #     processor.upload!
   #   end
   #
   #   it 'uploads cookbooks to chef server' do
   #     expect(berks_upload_shellout).to receive(:run_command)
-  #     server.upload
+  #     processor.upload!
   #   end
   #
   #   it 'uploads a cookbook to chef server' do
@@ -303,7 +441,7 @@ describe Drone::Chef::Processor do
   #       .to receive(:new).with('berks upload test_cookbook -b /path/to/project/Berksfile')
   #       .and_return(berks_upload_shellout)
   #     expect(berks_upload_shellout).to receive(:run_command)
-  #     server.upload
+  #     processor.upload!
   #   end
   #
   #   it 'does not freeze cookbooks uploaded to chef server' do
@@ -313,7 +451,7 @@ describe Drone::Chef::Processor do
   #       .to receive(:new).with('berks upload -b /path/to/project/Berksfile --no-freeze')
   #       .and_return(berks_upload_shellout)
   #     expect(berks_upload_shellout).to receive(:run_command)
-  #     server.upload
+  #     processor.upload!
   #   end
   #
   #   it 'does not upload chef org data from cookbooks' do
@@ -321,7 +459,7 @@ describe Drone::Chef::Processor do
   #     allow(server).to receive(:chef_data?).and_return(true)
   #
   #     expect(knife_upload_shellout).not_to receive(:run_command)
-  #     server.upload
+  #     processor.upload!
   #   end
   #
   #   context 'if not a cookbook' do
@@ -337,7 +475,7 @@ describe Drone::Chef::Processor do
   #       expect(server).not_to receive(:berks_upload)
   #       expect(Dir).to receive(:chdir).with('/path/to/project')
   #       expect(knife_upload_shellout).to receive(:run_command)
-  #       server.upload
+  #       processor.upload!
   #     end
   #
   #     it 'uploads chef org data and cookbooks' do
@@ -349,7 +487,7 @@ describe Drone::Chef::Processor do
   #       expect(server).to receive(:berks_upload)
   #       expect(Dir).to receive(:chdir).with('/path/to/project')
   #       expect(knife_upload_shellout).to receive(:run_command)
-  #       server.upload
+  #       processor.upload!
   #     end
   #
   #     it 'does not upload chef org data if non exists' do
@@ -358,19 +496,19 @@ describe Drone::Chef::Processor do
   #       allow(server).to receive(:chef_data?).and_return(false)
   #
   #       expect(knife_upload_shellout).not_to receive(:run_command)
-  #       server.upload
+  #       processor.upload!
   #     end
   #   end
   #
   #   context 'logging' do
   #     it 'logs failure of retrieving cookbooks' do
   #       allow(berks_install_shellout).to receive(:error?).and_return true
-  #       expect { server.upload }.to raise_error('ERROR: Failed to retrieve cookbooks')
+  #       expect { processor.upload! }.to raise_error('ERROR: Failed to retrieve cookbooks')
   #     end
   #
   #     it 'logs failure of uploading cookbooks' do
   #       allow(berks_upload_shellout).to receive(:error?).and_return true
-  #       expect { server.upload }.to raise_error('ERROR: Failed to upload cookbook')
+  #       expect { processor.upload! }.to raise_error('ERROR: Failed to upload cookbook')
   #     end
   #
   #     it 'logs failure of uploading chef org data' do
@@ -378,17 +516,17 @@ describe Drone::Chef::Processor do
   #       allow(server).to receive(:chef_data?).and_return(true)
   #       allow(Dir).to receive(:chdir).with('/path/to/project')
   #       allow(knife_upload_shellout).to receive(:error?).and_return true
-  #       expect { server.upload }.to raise_error('ERROR: knife upload failed')
+  #       expect { processor.upload! }.to raise_error('ERROR: knife upload failed')
   #     end
   #
   #     it 'does not give debug logs' do
   #       allow(config).to receive(:debug?).and_return true
-  #       server.upload
+  #       processor.upload!
   #       expect($stdout.string).to match(/DEBUG/)
   #     end
   #
   #     it 'does debug logs' do
-  #       server.upload
+  #       processor.upload!
   #       expect($stdout.string).not_to match(/DEBUG/)
   #     end
   #   end
