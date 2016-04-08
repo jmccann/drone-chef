@@ -17,7 +17,9 @@ describe Drone::Chef::Config do
         "type" => "server",
         "user" => "jane",
         "private_key" => "PEMDATAHERE",
-        "ssl_verify" => false
+        "ssl_verify" => false,
+        "freeze" => false,
+        "recursive" => false
       }
     }
   end
@@ -109,6 +111,40 @@ describe Drone::Chef::Config do
     it "returns false from user" do
       build_data["vargs"]["ssl_verify"] = false
       expect(config.ssl_verify?).to eq false
+    end
+  end
+
+  describe '#freeze?' do
+    it "returns true by default" do
+      build_data["vargs"].delete "freeze"
+      expect(config.freeze?).to eq true
+    end
+
+    it "returns true from user" do
+      build_data["vargs"]["freeze"] = true
+      expect(config.freeze?).to eq true
+    end
+
+    it "returns false from user" do
+      build_data["vargs"]["freeze"] = false
+      expect(config.freeze?).to eq false
+    end
+  end
+
+  describe '#recursive?' do
+    it "returns true by default" do
+      build_data["vargs"].delete "recursive"
+      expect(config.recursive?).to eq true
+    end
+
+    it "returns true from user" do
+      build_data["vargs"]["recursive"] = true
+      expect(config.recursive?).to eq true
+    end
+
+    it "returns false from user" do
+      build_data["vargs"]["recursive"] = false
+      expect(config.recursive?).to eq false
     end
   end
 

@@ -12,7 +12,8 @@ module Drone
 
       delegate [:vargs, :workspace] => :payload,
                [:netrc] => :workspace,
-               [:user, :private_key, :server, :org, :ssl_verify] => :vargs
+               [:user, :private_key, :server,
+                :org, :ssl_verify, :recursive] => :vargs
 
       #
       # Initialize an instance
@@ -74,10 +75,10 @@ module Drone
       # @return [TrueClass, FalseClass]
       #
       def freeze?
-        if vargs.freeze.nil?
+        if vargs["freeze"].nil?
           true
         else
-          vargs.freeze?
+          vargs["freeze"]
         end
       end
 
