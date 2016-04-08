@@ -83,6 +83,35 @@ describe Drone::Chef::Config do
     end
   end
 
+  describe '#ssl_mode' do
+    it "returns value to disable ssl verify in knife" do
+      build_data["vargs"]["ssl_verify"] = false
+      expect(config.ssl_mode).to eq ":verify_none"
+    end
+
+    it "returns value to enable ssl verify in knife" do
+      build_data["vargs"]["ssl_verify"] = true
+      expect(config.ssl_mode).to eq ":verify_peer"
+    end
+  end
+
+  describe '#ssl_verify?' do
+    it "returns true by default" do
+      build_data["vargs"].delete "ssl_verify"
+      expect(config.ssl_verify?).to eq true
+    end
+
+    it "returns true from user" do
+      build_data["vargs"]["ssl_verify"] = true
+      expect(config.ssl_verify?).to eq true
+    end
+
+    it "returns false from user" do
+      build_data["vargs"]["ssl_verify"] = false
+      expect(config.ssl_verify?).to eq false
+    end
+  end
+
   # let(:file) { double('File') }
   #
   # before do
