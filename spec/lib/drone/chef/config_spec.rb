@@ -2,6 +2,8 @@ require "spec_helper"
 require "drone"
 
 describe Drone::Chef::Config do
+  include FakeFS::SpecHelpers
+
   let(:build_data) do
     {
       "workspace" => {
@@ -159,11 +161,16 @@ describe Drone::Chef::Config do
     end
 
     it "creates the directory structure if it doesn't exist" do
-      skip "not sure how to test this"
-    end
+      FakeFS do
+        # Test that it does not exist yet
+        expect(Dir.exist?("/root/.chef")).to eq false
 
-    it "does not create the directory structure when it exists" do
-      skip "not sure how to test this"
+        # Run the code
+        config.knife_config_path
+
+        # Test that it exists now
+        expect(Dir.exist?("/root/.chef")).to eq true
+      end
     end
   end
 
@@ -175,11 +182,16 @@ describe Drone::Chef::Config do
     end
 
     it "creates the directory structure if it doesn't exist" do
-      skip "not sure how to test this"
-    end
+      FakeFS do
+        # Test that it does not exist yet
+        expect(Dir.exist?("/root/.berkshelf")).to eq false
 
-    it "does not create the directory structure when it exists" do
-      skip "not sure how to test this"
+        # Run the code
+        config.berks_config_path
+
+        # Test that it exists now
+        expect(Dir.exist?("/root/.berkshelf")).to eq true
+      end
     end
   end
 
