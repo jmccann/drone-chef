@@ -121,7 +121,7 @@ module Drone
       #
       def write_keyfile
         keyfile_path.open "w" do |f|
-          f.write key
+          f.write private_key
         end
       end
 

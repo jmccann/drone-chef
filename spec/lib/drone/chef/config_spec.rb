@@ -22,6 +22,8 @@ describe Drone::Chef::Config do
     }
   end
 
+  let(:file) { double("File") }
+
   let(:payload) do
     p = Drone::Plugin.new build_data.to_json
     p.parse
@@ -55,6 +57,29 @@ describe Drone::Chef::Config do
 
     it "does not throw an error if validation passes" do
       expect { config.validate! }.not_to raise_error
+    end
+  end
+
+  describe '#configure!' do
+    it "writes .netrc file" do
+      allow(config).to receive(:write_keyfile)
+      allow(Dir).to receive(:home).and_return "/root"
+
+      expect(File).to receive(:open).with("/root/.netrc", "w").and_yield(file)
+      expect(file).to receive(:puts).with("machine the_machine")
+      expect(file).to receive(:puts).with("  login johndoe")
+      expect(file).to receive(:puts).with("  password test123")
+
+      config.configure!
+    end
+
+    it "writes key file" do
+      allow(config).to receive(:write_netrc)
+
+      expect(File).to receive(:open).with("/tmp/key.pem", "w").and_yield(file)
+      expect(file).to receive(:write).with("PEMDATAHERE")
+
+      config.configure!
     end
   end
 
@@ -214,7 +239,4 @@ describe Drone::Chef::Config do
   #     it { is_expected.to eq false }
   #   end
   # end
-
-
-
 end
