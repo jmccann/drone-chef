@@ -3,7 +3,7 @@ Global Parameters
 =================
 The following are global parameters used for configuration this plugin:
 * **user** - connects as this user
-* **key** - connects with this private key
+* **private_key** - connects with this private key
 * **server** - Chef server to connect to
 * **type** - (default: `'supermarket'`) Type of server to upload to. Valid values: `'supermarket'`, `'server'`
 * **ssl_verify** - (default: `true`) Enable/Disable SSL verify
@@ -25,7 +25,7 @@ deploy:
   chef:
     image: jmccann/drone-chef
     user: userid
-    key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
+    private_key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
     server: https://mysupermarket.com
 ```
 
@@ -35,7 +35,7 @@ deploy:
   chef:
     image: jmccann/drone-chef
     user: userid
-    key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
+    private_key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
     server: https://chefserver.com
     type: server
     org: my_org
@@ -67,7 +67,7 @@ Global Parameters
 =================
 The following are global parameters used for configuration this plugin:
 * **user** - connects as this user
-* **key** - connects with this private key
+* **private_key** - connects with this private key
 * **server** - Chef server to connect to
 * **type** - (default: `'supermarket'`) Type of server to upload to. Valid values: `'supermarket'`, `'server'`
 * **ssl_verify** - (default: `true`) Enable/Disable SSL verify
@@ -89,7 +89,7 @@ deploy:
   chef:
     image: jmccann/drone-chef
     user: userid
-    key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
+    private_key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
     server: https://mysupermarket.com
 ```
 
@@ -99,7 +99,7 @@ deploy:
   chef:
     image: jmccann/drone-chef
     user: userid
-    key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
+    private_key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
     server: https://chefserver.com
     type: server
     org: my_org
