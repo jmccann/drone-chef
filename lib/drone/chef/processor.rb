@@ -133,7 +133,7 @@ module Drone
         cmd.run_command
 
         puts "DEBUG: knife upload stdout: #{cmd.stdout}" if @config.debug?
-        raise "ERROR: knife upload raiseed" if cmd.error?
+        raise "ERROR: knife upload failed" if cmd.error?
       end
 
       def cookbook

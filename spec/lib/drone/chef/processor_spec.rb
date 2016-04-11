@@ -40,6 +40,25 @@ describe Drone::Chef::Processor do
     Drone::Chef::Processor.new config
   end
 
+  let(:berks_install_shellout) do
+    double("berks install", run_command: nil, stdout: "berks_install_stdout",
+                            stderr: "berks_install_stderr", error?: false)
+  end
+
+  let(:berks_upload_shellout) do
+    double("berks upload", run_command: nil, stdout: "berks_upload_stdout",
+                           stderr: "berks_upload_stderr", error?: false)
+  end
+
+  let(:knife_upload_shellout) do
+    double("knife upload", run_command: nil, stdout: "knife_upload_stdout",
+                           stderr: "knife_upload_stderr", error?: false)
+  end
+
+  let(:cookbook) do
+    instance_double('Chef::Cookbook::Metadata', name: 'test_cookbook', version: '1.2.3', from_file: nil)
+  end
+
   before do
     allow(Dir).to receive(:home).and_return "/root"
   end
@@ -129,21 +148,6 @@ describe Drone::Chef::Processor do
       instance_double("Chef::Cookbook::Metadata", name: "test_cookbook",
                                                   version: "1.2.3",
                                                   from_file: nil)
-    end
-
-    let(:knife_upload_shellout) do
-      double("knife upload", run_command: nil, stdout: "knife_upload_stdout",
-                             stderr: "knife_upload_stderr", error?: false)
-    end
-
-    let(:berks_install_shellout) do
-      double("berks install", run_command: nil, stdout: "berks_install_stdout",
-                              stderr: "berks_install_stderr", error?: false)
-    end
-
-    let(:berks_upload_shellout) do
-      double("berks upload", run_command: nil, stdout: "berks_upload_stdout",
-                             stderr: "berks_upload_stderr", error?: false)
     end
 
     before do
@@ -262,35 +266,65 @@ describe Drone::Chef::Processor do
     end
   end
 
-  #   context 'logging' do
-  #     it 'logs failure of retrieving cookbooks' do
-  #       allow(berks_install_shellout).to receive(:error?).and_return true
-  #       expect { processor.upload! }.to raise_error('ERROR: Failed to retrieve cookbooks')
-  #     end
-  #
-  #     it 'logs failure of uploading cookbooks' do
-  #       allow(berks_upload_shellout).to receive(:error?).and_return true
-  #       expect { processor.upload! }.to raise_error('ERROR: Failed to upload cookbook')
-  #     end
-  #
-  #     it 'logs failure of uploading chef org data' do
-  #       allow(server).to receive(:cookbook?).and_return(false)
-  #       allow(server).to receive(:chef_data?).and_return(true)
-  #       allow(Dir).to receive(:chdir).with('/path/to/project')
-  #       allow(knife_upload_shellout).to receive(:error?).and_return true
-  #       expect { processor.upload! }.to raise_error('ERROR: knife upload failed')
-  #     end
-  #
-  #     it 'does not give debug logs' do
-  #       allow(config).to receive(:debug?).and_return true
-  #       processor.upload!
-  #       expect($stdout.string).to match(/DEBUG/)
-  #     end
-  #
-  #     it 'does debug logs' do
-  #       processor.upload!
-  #       expect($stdout.string).not_to match(/DEBUG/)
-  #     end
-  #   end
-  # end
+  context "logging" do
+    before do
+      allow(Mixlib::ShellOut)
+        .to receive(:new).with(/berks install/)
+        .and_return(berks_install_shellout)
+      allow(Mixlib::ShellOut)
+        .to receive(:new).with(/berks upload/)
+        .and_return(berks_upload_shellout)
+      allow(Mixlib::ShellOut)
+        .to receive(:new).with(/knife upload/)
+        .and_return(knife_upload_shellout)
+      allow(processor).to receive(:cookbook).and_return cookbook
+
+      $stdout = StringIO.new
+      $stderr = StringIO.new
+    end
+
+    after do
+      $stdout = STDOUT
+      $stderr = STDERR
+    end
+
+    it "logs failure of retrieving cookbooks" do
+      allow(processor).to receive(:berksfile?).and_return true
+      allow(berks_install_shellout).to receive(:error?).and_return true
+
+      expect { processor.upload! }
+        .to raise_error("ERROR: Failed to retrieve cookbooks")
+    end
+
+    it "logs failure of uploading cookbooks" do
+      allow(processor).to receive(:berksfile?).and_return true
+      allow(berks_upload_shellout).to receive(:error?).and_return true
+
+      expect { processor.upload! }
+        .to raise_error("ERROR: Failed to upload cookbook")
+    end
+
+    it "logs failure of uploading chef org data" do
+      allow(processor).to receive(:chef_data?).and_return(true)
+      allow(Dir).to receive(:chdir).with("/path/to/project")
+      allow(knife_upload_shellout).to receive(:error?).and_return true
+
+      expect { processor.upload! }.to raise_error("ERROR: knife upload failed")
+    end
+
+    it "does not give debug logs" do
+      allow(config).to receive(:debug?).and_return true
+      allow(processor).to receive(:berksfile?).and_return true
+
+      processor.upload!
+
+      expect($stdout.string).to match(/DEBUG/)
+    end
+
+    it "does debug logs" do
+      processor.upload!
+
+      expect($stdout.string).not_to match(/DEBUG/)
+    end
+  end
 end
