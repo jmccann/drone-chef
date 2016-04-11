@@ -7,11 +7,11 @@ Signal.trap("INT") do
 end
 
 begin
-  require "drone/plugin"
+  require "drone"
   require "drone/chef"
 rescue LoadError
   require "rubygems"
-  require "drone/plugin"
+  require "drone"
   require "drone/chef"
 end
 
