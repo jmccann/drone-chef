@@ -9,7 +9,7 @@ module Drone
     class Config
       extend Forwardable
 
-      attr_accessor :payload, :logger
+      attr_accessor :payload
 
       delegate [:vargs, :workspace] => :payload,
                [:netrc] => :workspace,
@@ -19,10 +19,9 @@ module Drone
       #
       # Initialize an instance
       #
-      def initialize(payload, logger = nil)
+      def initialize(payload, log = nil)
         self.payload = payload
-        @logger = logger || Logger.new(STDOUT)
-        @logger.level = Logger::DEBUG if debug?
+        @logger = log || logger
       end
 
       #
@@ -150,6 +149,17 @@ module Drone
         @keyfile_path ||= Pathname.new(
           "/tmp/key.pem"
         )
+      end
+
+      def logger
+        @logger ||= begin
+          l = Logger.new(STDIN)
+          l.level = Logger::DEBUG if debug?
+          l.formatter = proc do |severity, datetime, _progname, msg|
+            "#{severity}, [#{datetime}] : #{msg}"
+          end
+          l
+        end
       end
 
       protected
