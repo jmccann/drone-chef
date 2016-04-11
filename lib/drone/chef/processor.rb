@@ -111,7 +111,7 @@ module Drone
         cmd = Mixlib::ShellOut.new(command.join(" "))
         cmd.run_command
 
-        logger.debug "DEBUG: berks upload stdout: #{cmd.stdout}"
+        logger.debug "berks upload stdout: #{cmd.stdout}"
         raise "ERROR: Failed to upload cookbook" if cmd.error?
       end
 
@@ -134,7 +134,7 @@ module Drone
         cmd = Mixlib::ShellOut.new(command.join(" "))
         cmd.run_command
 
-        logger.debug "DEBUG: knife upload stdout: #{cmd.stdout}"
+        logger.debug "knife upload stdout: #{cmd.stdout}"
         raise "ERROR: knife upload failed" if cmd.error?
       end
 
