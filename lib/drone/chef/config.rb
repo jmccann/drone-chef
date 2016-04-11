@@ -179,6 +179,7 @@ module Drone
       # Write a .netrc file
       #
       def write_netrc
+        return if netrc.nil?
         netrc_path.open "w" do |f|
           f.puts "machine #{netrc.machine}"
           f.puts "  login #{netrc.login}"

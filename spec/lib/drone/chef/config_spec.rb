@@ -80,6 +80,16 @@ describe Drone::Chef::Config do
       config.configure!
     end
 
+    it "does not write .netrc file on local build" do
+      build_data["workspace"].delete "netrc"
+
+      allow(config).to receive(:write_keyfile)
+
+      expect(File).not_to receive(:open).with("/root/.netrc", "w")
+
+      config.configure!
+    end
+
     it "writes key file" do
       allow(config).to receive(:write_netrc)
 
