@@ -1,46 +1,110 @@
 # drone-chef
-Drone plugin for deploying cookbooks to a Chef Server or Supermarket.
 
-Global Parameters
-=================
-The following are global parameters used for configuration this plugin:
-* **user** - connects as this user
-* **key** - connects with this private key
-* **server** - Chef server to connect to
-* **type** - (default: `'supermarket'`) Type of server to upload to. Valid values: `'supermarket'`, `'server'`
-* **ssl_verify** - (default: `true`) Enable/Disable SSL verify
+[![Build Status](http://beta.drone.io/api/badges/drone-plugins/drone-chef/status.svg)](http://beta.drone.io/drone-plugins/drone-chef)
+[![Coverage Status](https://aircover.co/badges/drone-plugins/drone-chef/coverage.svg)](https://aircover.co/drone-plugins/drone-chef)
+[![](https://badge.imagelayers.io/plugins/drone-chef:latest.svg)](https://imagelayers.io/?images=plugins/drone-chef:latest 'Get your own badge on imagelayers.io')
 
-Chef Server Specific Parameters
-===============================
-The following are parameters used for configuration this plugin when uploading to a Chef Server:
-* **org** - Chef org to use on the Chef server
-* **freeze** - (default: `true`) Wether or not to freeze the version
-* **recursive** - (default: `true`) Enable/Disable ability to upload all dependency cookbooks as well
+Drone plugin to publish cookbooks to Chef Server. For the usage information and a listing of the available options please take a look at [the docs](DOCS.md).
 
-Example
-=======
+## Execute
 
-### Minimal Definition
-This will upload the cookbook to a supermarket server
-```yaml
-deploy:
-  chef:
-    image: jmccann/drone-chef
-    user: userid
-    key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
-    server: https://mysupermarket.com
+Install the deps using `rake`:
+
+```
+bundle install --path=gems --retry=5 --jobs=5
 ```
 
-### Chef Server Definition
-```yaml
-deploy:
-  chef:
-    image: jmccann/drone-chef
-    user: userid
-    key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
-    server: https://chefserver.com
-    type: server
-    org: my_org
-    freeze: true
-    ssl_verify: false
+### Example
+
+```sh
+bundle exec bin/drone-chef <<EOF
+{
+    "repo": {
+        "clone_url": "git://github.com/drone/drone",
+        "owner": "drone",
+        "name": "drone",
+        "full_name": "drone/drone"
+    },
+    "system": {
+        "link_url": "https://beta.drone.io"
+    },
+    "build": {
+        "number": 22,
+        "status": "success",
+        "started_at": 1421029603,
+        "finished_at": 1421029813,
+        "message": "Update the Readme",
+        "author": "johnsmith",
+        "author_email": "john.smith@gmail.com",
+        "event": "push",
+        "branch": "master",
+        "commit": "436b7a6e2abaddfd35740527353e78a227ddcb2c",
+        "ref": "refs/heads/master"
+    },
+    "workspace": {
+        "root": "/drone/src",
+        "path": "/drone/src/github.com/drone/drone"
+    },
+    "vargs": {
+        "user": "octocat",
+        "key": "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----",
+        "server": "https://chefserver.com",
+        "org": "my_org",
+        "freeze": true,
+        "ssl_verify": false
+    }
+}
+EOF
+```
+
+## Docker
+
+Build the container using `rake`:
+
+```
+bundle install --path=gems --retry=5 --jobs=5
+bin/rake build docker
+```
+
+### Example
+
+```sh
+docker run -i plugins/drone-chef:latest <<EOF
+{
+    "repo": {
+        "clone_url": "git://github.com/drone/drone",
+        "owner": "drone",
+        "name": "drone",
+        "full_name": "drone/drone"
+    },
+    "system": {
+        "link_url": "https://beta.drone.io"
+    },
+    "build": {
+        "number": 22,
+        "status": "success",
+        "started_at": 1421029603,
+        "finished_at": 1421029813,
+        "message": "Update the Readme",
+        "author": "johnsmith",
+        "author_email": "john.smith@gmail.com",
+        "event": "push",
+        "branch": "master",
+        "commit": "436b7a6e2abaddfd35740527353e78a227ddcb2c",
+        "ref": "refs/heads/master"
+    },
+    "workspace": {
+        "root": "/drone/src",
+        "path": "/drone/src/github.com/drone/drone"
+    },
+    "vargs": {
+        "user": "octocat",
+        "key": "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----",
+        "server": "https://chefserver.com",
+        "org": "my_org",
+        "freeze": true,
+        "ssl_verify": false
+    }
+}
+EOF
 ```

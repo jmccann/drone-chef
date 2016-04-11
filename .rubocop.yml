@@ -1,9 +1,13 @@
 AllCops:
   Exclude:
-    - 'test/**/*'
+    - gems/**/*
+    - test/chef_cookbook/**/*
 
-LineLength:
-  Max: 100
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
 
-SpecialGlobalVars:
-  Enabled: false
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+Style/AlignParameters:
+  EnforcedStyle: with_fixed_indentation

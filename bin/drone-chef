@@ -1,21 +1,28 @@
 #!/usr/bin/env ruby
 
-$LOAD_PATH.unshift('/opt/drone-chef/lib') if Dir.exist? '/opt/drone-chef/lib'
+$LOAD_PATH.push File.expand_path("../../lib", __FILE__)
 
-require 'drone_chef'
-require 'json'
-
-build_data = JSON.parse ARGV[1]
-type = build_data['vargs']['type'] || 'supermarket'
-
-case type
-when 'supermarket'
-  server = DroneChef::Supermarket.new ARGV[1]
-when 'server'
-  server = DroneChef::ChefServer.new ARGV[1]
-else
-  fail "Invalid type '#{type}' specified"
+Signal.trap("INT") do
+  abort
 end
 
-server.write_configs
-server.upload
+begin
+  require "drone"
+  require "drone/chef"
+rescue LoadError
+  require "rubygems"
+  require "drone"
+  require "drone/chef"
+end
+
+ARGV.delete "--"
+
+begin
+  Drone::Plugin.new(ARGV.first) do |payload|
+    Drone::Chef.new(
+      payload
+    ).execute!
+  end
+rescue Interrupt
+  abort "Quitting..."
+end

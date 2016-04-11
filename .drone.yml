@@ -1,0 +1,36 @@
+build:
+  image: ruby:2.3-alpine
+  commands:
+    - bundle install --path=gems --retry=5 --jobs=5
+    - bin/rake
+
+publish:
+  coverage:
+    include: coverage/lcov/drone-chef.lcov
+    when:
+      branch: master
+  docker:
+    username: $$DOCKER_USER
+    password: $$DOCKER_PASS
+    email: $$DOCKER_EMAIL
+    repo: plugins/drone-chef
+    tag: latest
+    when:
+      branch: master
+  docker:
+    username: $$DOCKER_USER
+    password: $$DOCKER_PASS
+    email: $$DOCKER_EMAIL
+    repo: plugins/drone-chef
+    tag: develop
+    when:
+      branch: develop
+
+plugin:
+  name: Chef
+  desc: Publish files and artifacts to Chef Server
+  type: publish
+  image: plugins/drone-chef
+  labels:
+    - chef
+    - ruby

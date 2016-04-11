@@ -1,3 +1,8 @@
-gem 'rspec', '~> 3.0', require: false, group: :test
-gem 'simplecov', require: false, group: :test
-gem 'mixlib-shellout', '~> 2.2'
+source "https://rubygems.org"
+gemspec
+
+group :development do
+  gem "guard", require: false
+  gem "guard-rubocop", require: false
+  gem "guard-rspec", require: false
+end
