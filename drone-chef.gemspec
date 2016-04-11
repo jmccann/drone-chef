@@ -43,4 +43,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "mixlib-shellout", "~> 2.2"
   s.add_runtime_dependency "chef", "~> 12.7"
   s.add_runtime_dependency "berkshelf", "~> 4.2"
+
+  # Needed until coercible has proper dependencies defined
+  s.add_runtime_dependency "bigdecimal", "~> 1.2"
 end

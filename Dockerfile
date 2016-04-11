@@ -22,6 +22,9 @@ RUN apk update && \
   gem install --no-ri --no-rdoc \
     berkshelf \
     --version '~> 4.2' && \
+  gem install --no-ri --no-rdoc \
+    bigdecimal \
+    --version '~> 1.2' && \
   apk del \
     bash \
     libffi-dev \
