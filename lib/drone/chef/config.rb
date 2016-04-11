@@ -1,4 +1,5 @@
 require "pathname"
+require "logger"
 
 module Drone
   class Chef
@@ -8,7 +9,7 @@ module Drone
     class Config
       extend Forwardable
 
-      attr_accessor :payload
+      attr_accessor :payload, :logger
 
       delegate [:vargs, :workspace] => :payload,
                [:netrc] => :workspace,
@@ -18,8 +19,10 @@ module Drone
       #
       # Initialize an instance
       #
-      def initialize(payload)
+      def initialize(payload, logger = nil)
         self.payload = payload
+        @logger = logger || Logger.new(STDOUT)
+        @logger.level = Logger::DEBUG if debug?
       end
 
       #
