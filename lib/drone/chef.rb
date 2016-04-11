@@ -1,4 +1,7 @@
 module Drone
+  #
+  # Drone plugin for uploading artifacts to Chef Server
+  #
   class Chef
     autoload :Config,
       File.expand_path("../chef/config", __FILE__)

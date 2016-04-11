@@ -92,7 +92,8 @@ module Drone
       #
       def berks_install
         puts "Retrieving cookbooks"
-        cmd = Mixlib::ShellOut.new("berks install -b #{@config.workspace.path}/Berksfile")
+        cmd = Mixlib::ShellOut
+              .new("berks install -b #{@config.workspace.path}/Berksfile")
         cmd.run_command
 
         raise "ERROR: Failed to retrieve cookbooks" if cmd.error?
@@ -115,13 +116,14 @@ module Drone
       end
 
       def chef_data?
-        !Dir.glob("#{@config.workspace.path}/{roles,environments,data_bags}").empty?
+        !Dir.glob("#{@config.workspace.path}/{roles,environments,data_bags}")
+            .empty?
       end
 
       #
       # Upload any roles, environments and data_bags
       #
-      def knife_upload
+      def knife_upload # rubocop:disable AbcSize
         puts "Uploading roles, environments and data bags"
         command = ["knife upload"]
         command << "."

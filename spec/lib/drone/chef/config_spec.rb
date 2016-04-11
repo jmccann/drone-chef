@@ -187,7 +187,8 @@ describe Drone::Chef::Config do
   describe '#berks_config_path' do
     it "returns the file path" do
       FakeFS do
-        expect(config.berks_config_path.to_s).to eq "/root/.berkshelf/config.json"
+        expect(config.berks_config_path.to_s)
+          .to eq "/root/.berkshelf/config.json"
       end
     end
 

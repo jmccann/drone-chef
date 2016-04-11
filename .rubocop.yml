@@ -1,6 +1,7 @@
 AllCops:
   Exclude:
     - gems/**/*
+    - test/chef_cookbook/**/*
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes

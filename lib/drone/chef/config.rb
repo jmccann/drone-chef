@@ -49,11 +49,7 @@ module Drone
       # @return [String]
       #
       def ssl_mode
-        if ssl_verify?
-          ":verify_peer"
-        else
-          ":verify_none"
-        end
+        ssl_verify? ? ":verify_peer" : ":verify_none"
       end
 
       #

@@ -56,7 +56,9 @@ describe Drone::Chef::Processor do
   end
 
   let(:cookbook) do
-    instance_double('Chef::Cookbook::Metadata', name: 'test_cookbook', version: '1.2.3', from_file: nil)
+    instance_double("Chef::Cookbook::Metadata", name: "test_cookbook",
+                                                version: "1.2.3",
+                                                from_file: nil)
   end
 
   before do
