@@ -15,8 +15,10 @@ rescue LoadError
   require "drone/chef"
 end
 
+ARGV.delete "--"
+
 begin
-  Drone::Plugin.new(STDIN) do |payload|
+  Drone::Plugin.new(ARGV.first) do |payload|
     Drone::Chef.new(
       payload
     ).execute!
