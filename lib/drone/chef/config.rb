@@ -6,7 +6,7 @@ module Drone
     #
     # Chef plugin configuration
     #
-    class Config
+    class Config # rubocop:disable ClassLength
       extend Forwardable
 
       attr_accessor :payload
@@ -152,13 +152,11 @@ module Drone
       end
 
       def logger
-        @logger ||= begin
-          l = Logger.new(STDIN)
+        @logger ||= Logger.new(STDOUT).tap do |l|
           l.level = Logger::DEBUG if debug?
-          l.formatter = proc do |severity, datetime, _progname, msg|
-            "#{severity}, [#{datetime}] : #{msg}"
+          l.formatter = proc do |sev, datetime, _progname, msg|
+            "#{sev}, [#{datetime}] : #{msg}"
           end
-          l
         end
       end
 
