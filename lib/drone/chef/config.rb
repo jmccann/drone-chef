@@ -9,7 +9,7 @@ module Drone
     class Config # rubocop:disable ClassLength
       extend Forwardable
 
-      attr_accessor :payload
+      attr_accessor :payload, :logger
 
       delegate [:vargs, :workspace] => :payload,
                [:netrc] => :workspace,
@@ -21,7 +21,7 @@ module Drone
       #
       def initialize(payload, log = nil)
         self.payload = payload
-        @logger = log || logger
+        self.logger = log || default_logger
       end
 
       #
@@ -151,7 +151,9 @@ module Drone
         )
       end
 
-      def logger
+      protected
+
+      def default_logger
         @logger ||= Logger.new(STDOUT).tap do |l|
           l.level = Logger::DEBUG if debug?
           l.formatter = proc do |sev, datetime, _progname, msg|
@@ -159,8 +161,6 @@ module Drone
           end
         end
       end
-
-      protected
 
       #
       # Write a knife keyfile
