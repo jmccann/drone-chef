@@ -157,7 +157,7 @@ module Drone
         @logger ||= Logger.new(STDOUT).tap do |l|
           l.level = Logger::DEBUG if debug?
           l.formatter = proc do |sev, datetime, _progname, msg|
-            "#{sev}, [#{datetime}] : #{msg}"
+            "#{sev}, [#{datetime}] : #{msg}\n"
           end
         end
       end
