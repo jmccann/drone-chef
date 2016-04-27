@@ -32,8 +32,16 @@ describe Drone::Chef::Processor do
     p.result
   end
 
+  let(:stringio) do
+    StringIO.new
+  end
+
+  let(:logger) do
+    Logger.new stringio
+  end
+
   let(:config) do
-    Drone::Chef::Config.new payload
+    Drone::Chef::Config.new payload, logger
   end
 
   let(:processor) do
@@ -280,14 +288,6 @@ describe Drone::Chef::Processor do
         .to receive(:new).with(/knife upload/)
         .and_return(knife_upload_shellout)
       allow(processor).to receive(:cookbook).and_return cookbook
-
-      $stdout = StringIO.new
-      $stderr = StringIO.new
-    end
-
-    after do
-      $stdout = STDOUT
-      $stderr = STDERR
     end
 
     it "logs failure of retrieving cookbooks" do
@@ -320,13 +320,13 @@ describe Drone::Chef::Processor do
 
       processor.upload!
 
-      expect($stdout.string).to match(/DEBUG/)
+      expect(stringio.string).to match(/DEBUG/)
     end
 
     it "does debug logs" do
       processor.upload!
 
-      expect($stdout.string).not_to match(/DEBUG/)
+      expect(stringio.string).not_to match(/DEBUG/)
     end
   end
 end

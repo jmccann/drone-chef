@@ -1,14 +1,15 @@
 require "pathname"
+require "logger"
 
 module Drone
   class Chef
     #
     # Chef plugin configuration
     #
-    class Config
+    class Config # rubocop:disable ClassLength
       extend Forwardable
 
-      attr_accessor :payload
+      attr_accessor :payload, :logger
 
       delegate [:vargs, :workspace] => :payload,
                [:netrc] => :workspace,
@@ -18,8 +19,9 @@ module Drone
       #
       # Initialize an instance
       #
-      def initialize(payload)
+      def initialize(payload, log = nil)
         self.payload = payload
+        self.logger = log || default_logger
       end
 
       #
@@ -150,6 +152,15 @@ module Drone
       end
 
       protected
+
+      def default_logger
+        @logger ||= Logger.new(STDOUT).tap do |l|
+          l.level = Logger::DEBUG if debug?
+          l.formatter = proc do |sev, datetime, _progname, msg|
+            "#{sev}, [#{datetime}] : #{msg}\n"
+          end
+        end
+      end
 
       #
       # Write a knife keyfile

@@ -91,7 +91,7 @@ module Drone
       # Command to gather necessary cookbooks
       #
       def berks_install
-        puts "Retrieving cookbooks"
+        logger.info "Retrieving cookbooks"
         cmd = Mixlib::ShellOut
               .new("berks install -b #{@config.workspace.path}/Berksfile")
         cmd.run_command
@@ -103,7 +103,7 @@ module Drone
       # Command to upload cookbook(s) with Berkshelf
       #
       def berks_upload # rubocop:disable AbcSize
-        puts "Running berks upload"
+        logger.info "Running berks upload"
         command = ["berks upload"]
         command << cookbook.name unless config.recursive?
         command << "-b #{@config.workspace.path}/Berksfile"
@@ -111,7 +111,7 @@ module Drone
         cmd = Mixlib::ShellOut.new(command.join(" "))
         cmd.run_command
 
-        puts "DEBUG: berks upload stdout: #{cmd.stdout}" if @config.debug?
+        logger.debug "berks upload stdout: #{cmd.stdout}"
         raise "ERROR: Failed to upload cookbook" if cmd.error?
       end
 
@@ -124,7 +124,7 @@ module Drone
       # Upload any roles, environments and data_bags
       #
       def knife_upload # rubocop:disable AbcSize
-        puts "Uploading roles, environments and data bags"
+        logger.info "Uploading roles, environments and data bags"
         command = ["knife upload"]
         command << "."
         command << "-c #{@config.knife_config_path}"
@@ -134,7 +134,7 @@ module Drone
         cmd = Mixlib::ShellOut.new(command.join(" "))
         cmd.run_command
 
-        puts "DEBUG: knife upload stdout: #{cmd.stdout}" if @config.debug?
+        logger.debug "knife upload stdout: #{cmd.stdout}"
         raise "ERROR: knife upload failed" if cmd.error?
       end
 
@@ -144,6 +144,10 @@ module Drone
           metadata.from_file("#{@config.workspace.path}/metadata.rb")
           metadata
         end
+      end
+
+      def logger
+        config.logger
       end
     end
   end
