@@ -103,6 +103,34 @@ describe Drone::Chef::Processor do
       end
     end
 
+    describe '#berksfile?' do
+      it "returns true if Berksfile exists" do
+        FakeFS do
+          FileUtils.mkdir_p "/path/to/project"
+          FileUtils.touch "/path/to/project/Berksfile"
+
+          expect(processor.berksfile?).to eq true
+        end
+      end
+
+      it "returns true if Berksfile.lock exists" do
+        FakeFS do
+          FileUtils.mkdir_p "/path/to/project"
+          FileUtils.touch "/path/to/project/Berksfile.lock"
+
+          expect(processor.berksfile?).to eq true
+        end
+      end
+
+      it "returns false otherwise" do
+        FakeFS do
+          FileUtils.mkdir_p "/path/to/project"
+
+          expect(processor.berksfile?).to eq false
+        end
+      end
+    end
+
     context "writes the knife config" do
       it "includes the username" do
         FakeFS do
