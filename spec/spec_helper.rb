@@ -1,5 +1,5 @@
-require "fakefs/spec_helpers"
 require "pry"
+require "fakefs/spec_helpers"
 require "simplecov"
 require "simplecov-lcov"
 
