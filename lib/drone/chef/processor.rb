@@ -67,17 +67,6 @@ module Drone
         File.exist? "#{@config.workspace.path}/metadata.rb"
       end
 
-      # #
-      # # Is there a Berksfile?
-      # #
-      # def berksfile?
-      #   config.berks_files.each do |f|
-      #     return true if File.exist? "#{config.workspace.path}/#{f}"
-      #     return true if File.exist? "#{config.workspace.path}/#{f}.lock"
-      #   end
-      #   false
-      # end
-
       def url
         "#{@config.server}/organizations/#{@config.vargs["org"]}"
       end
