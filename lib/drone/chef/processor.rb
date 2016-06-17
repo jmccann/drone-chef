@@ -104,8 +104,10 @@ module Drone
               .new("berks install -b #{config.workspace.path}/#{f}")
         cmd.run_command
 
-        logger.error cmd.stdout + cmd.stderr if cmd.error?
-        raise "ERROR: Failed to retrieve cookbooks" if cmd.error?
+        if cmd.error?
+          logger.error cmd.stdout + cmd.stderr
+          raise "ERROR: Failed to retrieve cookbooks"
+        end
       end
 
       #
