@@ -2,8 +2,6 @@ require "spec_helper"
 require "drone"
 
 describe Drone::Chef::Processor do
-  include FakeFS::SpecHelpers
-
   let(:build_data) do
     {
       "workspace" => {
@@ -41,7 +39,9 @@ describe Drone::Chef::Processor do
   end
 
   let(:config) do
-    Drone::Chef::Config.new payload, logger
+    c = Drone::Chef::Config.new payload, logger
+    allow(c).to receive(:home).and_return "/root"
+    c
   end
 
   let(:processor) do
@@ -69,10 +69,6 @@ describe Drone::Chef::Processor do
                                                 from_file: nil)
   end
 
-  before do
-    allow(Dir).to receive(:home).and_return "/root"
-  end
-
   describe '#validate!' do
     it "passes when org is provided" do
       expect { processor.validate! }.not_to raise_error
@@ -86,6 +82,8 @@ describe Drone::Chef::Processor do
   end
 
   describe '#configure!' do
+    include FakeFS::SpecHelpers
+
     before do
       allow(config).to receive(:configure!)
     end
@@ -154,6 +152,8 @@ describe Drone::Chef::Processor do
   end
 
   describe '#upload!' do
+    include FakeFS::SpecHelpers
+
     let(:cookbook) do
       instance_double("Chef::Cookbook::Metadata", name: "test_cookbook",
                                                   version: "1.2.3",
@@ -166,7 +166,6 @@ describe Drone::Chef::Processor do
       build_data["vargs"].delete "recursive"
 
       allow(Chef::Cookbook::Metadata).to receive(:new).and_return cookbook
-      allow(File).to receive(:exist?).with(/Berksfile/).and_return true
 
       allow(Mixlib::ShellOut)
         .to receive(:new).with(/berks install/)
@@ -174,48 +173,68 @@ describe Drone::Chef::Processor do
       allow(Mixlib::ShellOut)
         .to receive(:new).with(/berks upload/)
         .and_return(berks_upload_shellout)
+    end
 
-      allow(Dir).to receive(:exist?)
-        .with("/path/to/project/{roles,environments,data_bags}")
-        .and_return(["/path/to/project/roles"])
-      allow(File).to receive(:exist?).with("/path/to/project/metadata.rb")
-        .and_return(true)
+    after do
+      FakeFS::FileSystem.clear
     end
 
     it "retrieves cookbook and dependency cookbooks" do
-      expect(Mixlib::ShellOut)
-        .to receive(:new).with("berks install -b /path/to/project/Berksfile")
-      processor.upload!
+      FakeFS do
+        FileUtils.mkdir_p "/path/to/project"
+        FileUtils.touch "/path/to/project/Berksfile"
+
+        expect(Mixlib::ShellOut)
+          .to receive(:new).with("berks install -b /path/to/project/Berksfile")
+        processor.upload!
+      end
     end
 
     it "uploads cookbooks to chef server" do
-      expect(Mixlib::ShellOut)
-        .to receive(:new).with("berks upload -b /path/to/project/Berksfile")
-        .and_return(berks_upload_shellout)
+      FakeFS do
+        FileUtils.mkdir_p "/path/to/project"
+        FileUtils.touch "/path/to/project/Berksfile"
 
-      processor.upload!
+        expect(Mixlib::ShellOut)
+          .to receive(:new).with("berks upload -b /path/to/project/Berksfile")
+          .and_return(berks_upload_shellout)
+
+        processor.upload!
+      end
     end
 
     it "uploads a cookbook to chef server" do
       build_data["vargs"]["recursive"] = false
 
-      expect(Mixlib::ShellOut)
-        .to receive(:new)
-        .with("berks upload test_cookbook -b /path/to/project/Berksfile")
-        .and_return(berks_upload_shellout)
-      expect(berks_upload_shellout).to receive(:run_command)
-      processor.upload!
+      FakeFS do
+        FileUtils.mkdir_p "/path/to/project"
+        FileUtils.touch "/path/to/project/Berksfile"
+
+        expect(Mixlib::ShellOut)
+          .to receive(:new)
+          .with("berks upload test_cookbook -b /path/to/project/Berksfile")
+          .and_return(berks_upload_shellout)
+        expect(berks_upload_shellout).to receive(:run_command)
+
+        processor.upload!
+      end
     end
 
     it "does not freeze cookbooks uploaded to chef server" do
       build_data["vargs"]["freeze"] = false
 
-      expect(Mixlib::ShellOut)
-        .to receive(:new)
-        .with("berks upload -b /path/to/project/Berksfile --no-freeze")
-        .and_return(berks_upload_shellout)
-      expect(berks_upload_shellout).to receive(:run_command)
-      processor.upload!
+      FakeFS do
+        FileUtils.mkdir_p "/path/to/project"
+        FileUtils.touch "/path/to/project/Berksfile"
+
+        expect(Mixlib::ShellOut)
+          .to receive(:new)
+          .with("berks upload -b /path/to/project/Berksfile --no-freeze")
+          .and_return(berks_upload_shellout)
+        expect(berks_upload_shellout).to receive(:run_command)
+
+        processor.upload!
+      end
     end
 
     it "does not upload chef org data from cookbooks" do
@@ -233,33 +252,35 @@ describe Drone::Chef::Processor do
       end
 
       it "uploads chef org data only when no cookbooks defined" do
-        allow(processor).to receive(:berksfile?).and_return(false)
-        allow(processor).to receive(:chef_data?).and_return(true)
+        FakeFS do
+          FileUtils.mkdir_p "/path/to/project/roles"
 
-        expect(processor).not_to receive(:berks_install)
-        expect(processor).not_to receive(:berks_upload)
-        expect(Dir).to receive(:chdir).with("/path/to/project")
-        expect(Mixlib::ShellOut)
-          .to receive(:new).with("knife upload . -c /root/.chef/knife.rb")
-          .and_return(knife_upload_shellout)
+          expect(processor).not_to receive(:berks_install)
+          expect(processor).not_to receive(:berks_upload)
+          expect(Dir).to receive(:chdir).with("/path/to/project")
+          expect(Mixlib::ShellOut)
+            .to receive(:new).with("knife upload . -c /root/.chef/knife.rb")
+            .and_return(knife_upload_shellout)
 
-        processor.upload!
+          processor.upload!
+        end
       end
 
       it "uploads chef org data and cookbooks" do
-        allow(File).to receive(:exist?).with("/path/to/project/metadata.rb")
-          .and_return(false)
-        allow(processor).to receive(:berksfile?).and_return(true)
-        allow(processor).to receive(:chef_data?).and_return(true)
+        FakeFS do
+          FileUtils.mkdir_p "/path/to/project/roles"
+          FileUtils.touch "/path/to/project/Berksfile"
 
-        expect(processor).to receive(:berks_install)
-        expect(processor).to receive(:berks_upload)
-        expect(Dir).to receive(:chdir).with("/path/to/project")
-        expect(Mixlib::ShellOut)
-          .to receive(:new).with("knife upload . -c /root/.chef/knife.rb")
-          .and_return(knife_upload_shellout)
+          expect(processor).to receive(:berks_install)
+          expect(processor).to receive(:berks_upload)
 
-        processor.upload!
+          expect(Dir).to receive(:chdir).with("/path/to/project")
+          expect(Mixlib::ShellOut)
+            .to receive(:new).with("knife upload . -c /root/.chef/knife.rb")
+            .and_return(knife_upload_shellout)
+
+          processor.upload!
+        end
       end
 
       it "does not upload chef org data if non exists" do
@@ -290,6 +311,10 @@ describe Drone::Chef::Processor do
       allow(processor).to receive(:cookbook).and_return cookbook
     end
 
+    after do
+      FakeFS::FileSystem.clear
+    end
+
     it "logs failure of retrieving cookbooks" do
       allow(processor).to receive(:berksfile?).and_return true
       allow(berks_install_shellout).to receive(:error?).and_return true
@@ -307,14 +332,17 @@ describe Drone::Chef::Processor do
     end
 
     it "logs failure of uploading chef org data" do
-      allow(processor).to receive(:chef_data?).and_return(true)
-      allow(Dir).to receive(:chdir).with("/path/to/project")
-      allow(knife_upload_shellout).to receive(:error?).and_return true
+      FakeFS do
+        FileUtils.mkdir_p "/path/to/project/roles"
 
-      expect { processor.upload! }.to raise_error("ERROR: knife upload failed")
+        allow(knife_upload_shellout).to receive(:error?).and_return true
+
+        expect { processor.upload! }
+          .to raise_error("ERROR: knife upload failed")
+      end
     end
 
-    it "does not give debug logs" do
+    it "does produce debug logs" do
       allow(config).to receive(:debug?).and_return true
       allow(processor).to receive(:berksfile?).and_return true
 
@@ -323,7 +351,7 @@ describe Drone::Chef::Processor do
       expect(stringio.string).to match(/DEBUG/)
     end
 
-    it "does debug logs" do
+    it "does not produce debug logs" do
       processor.upload!
 
       expect(stringio.string).not_to match(/DEBUG/)

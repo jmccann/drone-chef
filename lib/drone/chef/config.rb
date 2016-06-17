@@ -14,7 +14,7 @@ module Drone
       delegate [:vargs, :workspace] => :payload,
                [:netrc] => :workspace,
                [:user, :private_key, :server,
-                :org, :ssl_verify, :recursive] => :vargs
+                :org, :ssl_verify, :recursive, :berks_files] => :vargs
 
       #
       # Initialize an instance
@@ -43,6 +43,19 @@ module Drone
         raise "Please provide a username" if user.nil?
         raise "Please provide a private key" if private_key.nil?
         raise "Please provide a server URL" if server.nil?
+      end
+
+      #
+      # List of Berksfiles to parse
+      #
+      # @return [Array<String>]
+      #
+      def berks_files
+        unless vargs.berks_files.nil? || vargs.berks_files.is_a?(Array)
+          raise "vargs.berks_files must be Array"
+        end
+        berks_files_exist? unless vargs.berks_files.nil?
+        vargs.berks_files || ["Berksfile"]
       end
 
       #
@@ -111,7 +124,7 @@ module Drone
       #
       def knife_config_path
         @knife_config_path ||= Pathname.new(
-          Dir.home
+          home
         ).join(
           ".chef",
           "knife.rb"
@@ -129,7 +142,7 @@ module Drone
       #
       def berks_config_path
         @berks_config_path ||= Pathname.new(
-          Dir.home
+          home
         ).join(
           ".berkshelf",
           "config.json"
@@ -151,6 +164,10 @@ module Drone
         )
       end
 
+      def home
+        Dir.home
+      end
+
       protected
 
       def default_logger
@@ -158,6 +175,14 @@ module Drone
           l.level = Logger::DEBUG if debug?
           l.formatter = proc do |sev, datetime, _progname, msg|
             "#{sev}, [#{datetime}] : #{msg}\n"
+          end
+        end
+      end
+
+      def berks_files_exist?
+        vargs.berks_files.each do |f|
+          unless File.exist? "#{workspace.path}/#{f}"
+            raise "Berksfile '#{f}' does not exist"
           end
         end
       end
@@ -176,7 +201,7 @@ module Drone
       #
       def netrc_path
         @netrc_path ||= Pathname.new(
-          Dir.home
+          home
         ).join(
           ".netrc"
         )

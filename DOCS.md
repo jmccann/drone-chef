@@ -6,6 +6,7 @@ The following are global parameters used for configuration this plugin:
 * **private_key** - connects with this private key
 * **server** - Chef server to connect to
 * **type** - (default: `'supermarket'`) Type of server to upload to. Valid values: `'supermarket'`, `'server'`
+* **berks_files** - (default: `['Berksfile']`) List of Berksfiles to use
 * **ssl_verify** - (default: `true`) Enable/Disable SSL verify
 
 Chef Server Specific Parameters

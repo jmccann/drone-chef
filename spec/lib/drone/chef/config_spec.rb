@@ -16,12 +16,12 @@ describe Drone::Chef::Config do
       },
       "vargs" => {
         "server" => "https://myserver.com",
-        "type" => "server",
         "user" => "jane",
         "private_key" => "PEMDATAHERE",
         "ssl_verify" => false,
         "freeze" => false,
-        "recursive" => false
+        "recursive" => false,
+        "berks_files" => ["Berksfile", "Berksfile.another"]
       }
     }
   end
@@ -40,6 +40,17 @@ describe Drone::Chef::Config do
 
   before do
     allow(Dir).to receive(:home).and_return "/root"
+    allow(File).to receive(:exist?).and_call_original
+    allow(File).to receive(:exist?)
+      .with("/path/to/project/Berksfile")
+      .and_return true
+    allow(File).to receive(:exist?)
+      .with("/path/to/project/Berksfile.another")
+      .and_return true
+  end
+
+  after do
+    FakeFS::FileSystem.clear
   end
 
   describe '#validate!' do
@@ -97,6 +108,35 @@ describe Drone::Chef::Config do
       expect(file).to receive(:write).with("PEMDATAHERE")
 
       config.configure!
+    end
+  end
+
+  describe '#berks_files' do
+    it "returns default value if none provided" do
+      build_data["vargs"].delete "berks_files"
+      expect(config.berks_files).to eq ["Berksfile"]
+    end
+
+    it "returns user supplied value" do
+      expect(config.berks_files).to eq ["Berksfile", "Berksfile.another"]
+    end
+
+    it "raises error on invalid user data" do
+      build_data["vargs"]["berks_files"] = "Berksfile"
+      expect { config.berks_files }
+        .to raise_error("vargs.berks_files must be Array")
+    end
+
+    it "raises error on missing file" do
+      allow(File).to receive(:exist?).and_call_original
+
+      FakeFS do
+        FileUtils.mkdir_p "/path/to/project"
+        FileUtils.touch "/path/to/project/Berksfile"
+
+        expect { config.berks_files }
+          .to raise_error("Berksfile 'Berksfile.another' does not exist")
+      end
     end
   end
 

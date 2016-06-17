@@ -7,7 +7,7 @@ module Drone
     #
     # Class for uploading cookbooks to a Chef Server
     #
-    class Processor
+    class Processor # rubocop:disable ClassLength
       attr_accessor :config
 
       #
@@ -60,8 +60,10 @@ module Drone
       # Is there a Berksfile?
       #
       def berksfile?
-        return true if File.exist? "#{@config.workspace}/Berksfile"
-        return true if File.exist? "#{@config.workspace}/Berksfile.lock"
+        config.berks_files.each do |f|
+          return true if File.exist? "#{config.workspace.path}/#{f}"
+          return true if File.exist? "#{config.workspace.path}/#{f}.lock"
+        end
         false
       end
 
@@ -91,9 +93,15 @@ module Drone
       # Command to gather necessary cookbooks
       #
       def berks_install
-        logger.info "Retrieving cookbooks"
+        config.berks_files.each do |f|
+          berks_install_for f
+        end
+      end
+
+      def berks_install_for(f)
+        logger.info "Retrieving cookbooks for #{f}"
         cmd = Mixlib::ShellOut
-              .new("berks install -b #{@config.workspace.path}/Berksfile")
+              .new("berks install -b #{config.workspace.path}/#{f}")
         cmd.run_command
 
         raise "ERROR: Failed to retrieve cookbooks" if cmd.error?
@@ -102,11 +110,17 @@ module Drone
       #
       # Command to upload cookbook(s) with Berkshelf
       #
-      def berks_upload # rubocop:disable AbcSize
-        logger.info "Running berks upload"
+      def berks_upload
+        config.berks_files.each do |f|
+          berks_upload_for f
+        end
+      end
+
+      def berks_upload_for(f) # rubocop:disable AbcSize
+        logger.info "Running berks upload for #{f}"
         command = ["berks upload"]
         command << cookbook.name unless config.recursive?
-        command << "-b #{@config.workspace.path}/Berksfile"
+        command << "-b #{@config.workspace.path}/#{f}"
         command << "--no-freeze" unless config.freeze?
         cmd = Mixlib::ShellOut.new(command.join(" "))
         cmd.run_command
