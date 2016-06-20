@@ -20,6 +20,9 @@ RUN apk update && \
     chef \
     --version '~> 12.7' && \
   gem install --no-ri --no-rdoc \
+    io-console \
+    --version '~> 0.4' && \
+  gem install --no-ri --no-rdoc \
     berkshelf \
     --version '~> 4.2' && \
   gem install --no-ri --no-rdoc \

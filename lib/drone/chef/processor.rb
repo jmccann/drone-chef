@@ -47,15 +47,6 @@ module Drone
         knife_upload unless cookbook? || !chef_data?
       end
 
-      protected
-
-      #
-      # Are we uploading a cookbook?
-      #
-      def cookbook?
-        File.exist? "#{@config.workspace.path}/metadata.rb"
-      end
-
       #
       # Is there a Berksfile?
       #
@@ -65,6 +56,15 @@ module Drone
           return true if File.exist? "#{config.workspace.path}/#{f}.lock"
         end
         false
+      end
+
+      protected
+
+      #
+      # Are we uploading a cookbook?
+      #
+      def cookbook?
+        File.exist? "#{@config.workspace.path}/metadata.rb"
       end
 
       def url
@@ -104,7 +104,10 @@ module Drone
               .new("berks install -b #{config.workspace.path}/#{f}")
         cmd.run_command
 
-        raise "ERROR: Failed to retrieve cookbooks" if cmd.error?
+        if cmd.error?
+          logger.error cmd.stdout + cmd.stderr
+          raise "ERROR: Failed to retrieve cookbooks"
+        end
       end
 
       #
@@ -126,6 +129,7 @@ module Drone
         cmd.run_command
 
         logger.debug "berks upload stdout: #{cmd.stdout}"
+        logger.error cmd.stdout + cmd.stderr if cmd.error?
         raise "ERROR: Failed to upload cookbook" if cmd.error?
       end
 
