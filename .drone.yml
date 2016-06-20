@@ -12,7 +12,7 @@ pipeline:
     repo: plugins/drone-chef
     tags: [ "latest" ]
     when:
-      branch: master
+      branch: release/0.4
       event: push
 
 plugin:
