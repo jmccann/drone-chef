@@ -154,6 +154,7 @@ module Drone
         logger.debug "knife_upload cmd: #{command.join(" ")}"
         logger.info "\n#{cmd.stdout}"
 
+        logger.error cmd.stdout + cmd.stderr if cmd.error?
         raise "ERROR: knife upload failed" if cmd.error?
       end
 
