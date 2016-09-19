@@ -5,13 +5,8 @@ The following are global parameters used for configuration this plugin:
 * **user** - connects as this user
 * **private_key** - connects with this private key
 * **server** - Chef server to connect to
-* **type** - (default: `'supermarket'`) Type of server to upload to. Valid values: `'supermarket'`, `'server'`
 * **berks_files** - (default: `['Berksfile']`) List of Berksfiles to use
 * **ssl_verify** - (default: `true`) Enable/Disable SSL verify
-
-Chef Server Specific Parameters
-===============================
-The following are parameters used for configuration this plugin when uploading to a Chef Server:
 * **org** - Chef org to use on the Chef server
 * **freeze** - (default: `true`) Wether or not to freeze the version
 * **recursive** - (default: `true`) Enable/Disable ability to upload all dependency cookbooks as well

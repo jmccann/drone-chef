@@ -1,20 +1,14 @@
-require "pathname"
 require "logger"
+require "openssl"
+require "pathname"
 
 module Drone
   class Chef
     #
     # Chef plugin configuration
     #
-    class Config # rubocop:disable ClassLength
-      extend Forwardable
-
+    class Config
       attr_accessor :payload, :logger
-
-      delegate [:vargs, :workspace] => :payload,
-               [:netrc] => :workspace,
-               [:user, :private_key, :server,
-                :org, :ssl_verify, :recursive, :berks_files] => :vargs
 
       #
       # Initialize an instance
@@ -25,11 +19,18 @@ module Drone
       end
 
       #
+      # The path to our git workspace
+      #
+      def workspace_path
+        @workspace_path ||= Pathname.new Dir.pwd
+      end
+
+      #
       # Write config files to filesystem
       #
       def configure!
         write_keyfile
-        write_netrc
+        # write_netrc
       end
 
       #
@@ -37,25 +38,16 @@ module Drone
       #
       # @raise RuntimeError
       #
-      def validate!
-        raise "No plugin data found" if vargs.empty?
+      def validate! # rubocop:disable AbcSize
+        raise "Missing 'user'" if missing?(:user)
+        raise "Missing 'server'" if missing?(:server)
+        raise "Missing 'org'" if missing?(:org)
 
-        raise "Please provide a username" if user.nil?
-        raise "Please provide a private key" if private_key.nil?
-        raise "Please provide a server URL" if server.nil?
-      end
-
-      #
-      # List of Berksfiles to parse
-      #
-      # @return [Array<String>]
-      #
-      def berks_files
-        unless vargs.berks_files.nil? || vargs.berks_files.is_a?(Array)
-          raise "vargs.berks_files must be Array"
-        end
-        berks_files_exist? unless vargs.berks_files.nil?
-        vargs.berks_files || ["Berksfile"]
+        raise "Missing CHEF_PRIVATE_KEY" if missing?(:private_key)
+        ::OpenSSL::PKey::RSA.new payload[:private_key]
+      rescue OpenSSL::PKey::RSAError
+        raise "Failed to load CHEF_PRIVATE_KEY provided starting with:" \
+              "\n#{payload[:private_key][0, 35]}"
       end
 
       #
@@ -64,59 +56,7 @@ module Drone
       # @return [String]
       #
       def ssl_mode
-        ssl_verify? ? ":verify_peer" : ":verify_none"
-      end
-
-      #
-      # Flag on wheter to use SSL verification
-      #
-      # @return [TrueClass, FalseClass]
-      #
-      def ssl_verify?
-        if vargs.ssl_verify.nil?
-          true
-        else
-          vargs.ssl_verify?
-        end
-      end
-
-      #
-      # Get freeze for Chef
-      #
-      # @return [TrueClass, FalseClass]
-      #
-      def freeze?
-        if vargs["freeze"].nil?
-          true
-        else
-          vargs["freeze"]
-        end
-      end
-
-      #
-      # Get recursive for Chef
-      #
-      # @return [TrueClass, FalseClass]
-      #
-      def recursive?
-        if vargs.recursive.nil?
-          true
-        else
-          vargs.recursive?
-        end
-      end
-
-      #
-      # Determine if we are debugging
-      #
-      # @return [TrueClass, FalseClass]
-      #
-      def debug?
-        if vargs.debug.nil?
-          false
-        else
-          ENV["DEBUG"] == "true" || vargs.debug?
-        end
+        payload[:ssl_verify] ? ":verify_peer" : ":verify_none"
       end
 
       #
@@ -172,7 +112,7 @@ module Drone
 
       def default_logger
         @logger ||= Logger.new(STDOUT).tap do |l|
-          l.level = Logger::DEBUG if debug?
+          l.level = payload[:debug] ? Logger::DEBUG : Logger::INFO
           l.formatter = proc do |sev, datetime, _progname, msg|
             "#{sev}, [#{datetime}] : #{msg}\n"
           end
@@ -192,7 +132,7 @@ module Drone
       #
       def write_keyfile
         keyfile_path.open "w" do |f|
-          f.write private_key
+          f.write payload[:private_key]
         end
       end
 
@@ -217,6 +157,10 @@ module Drone
           f.puts "  login #{netrc.login}"
           f.puts "  password #{netrc.password}"
         end
+      end
+
+      def missing?(key)
+        payload[key].nil? || payload[key].empty?
       end
     end
   end

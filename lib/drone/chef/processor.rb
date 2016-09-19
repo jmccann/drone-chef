@@ -25,7 +25,8 @@ module Drone
       # Validate that all requirements are met
       #
       def validate!
-        raise "Please provide an organization" if config.org.nil?
+        config.validate!
+        # raise "Please provide an organization" if config.payloadorg.nil?
       end
 
       #
@@ -51,9 +52,9 @@ module Drone
       # Is there a Berksfile?
       #
       def berksfile?
-        config.berks_files.each do |f|
-          return true if File.exist? "#{config.workspace.path}/#{f}"
-          return true if File.exist? "#{config.workspace.path}/#{f}.lock"
+        config.payload[:berks_files].each do |f|
+          return true if File.exist? "#{config.workspace_path}/#{f}"
+          return true if File.exist? "#{config.workspace_path}/#{f}.lock"
         end
         false
       end
@@ -64,27 +65,26 @@ module Drone
       # Are we uploading a cookbook?
       #
       def cookbook?
-        File.exist? "#{@config.workspace.path}/metadata.rb"
+        File.exist? "#{config.workspace_path}/metadata.rb"
       end
 
       def url
-        "#{@config.server}/organizations/#{@config.vargs["org"]}"
+        "#{config.payload[:server]}/organizations/#{config.payload[:org]}"
       end
 
-      def write_knife_rb
+      def write_knife_rb # rubocop:disable AbcSize
         config.knife_config_path.open "w" do |f|
-          f.puts "node_name '#{@config.user}'"
-          f.puts "client_key '#{@config.keyfile_path}'"
+          f.puts "node_name '#{config.payload[:user]}'"
+          f.puts "client_key '#{config.keyfile_path}'"
           f.puts "chef_server_url '#{url}'"
-          f.puts "chef_repo_path '#{@config.workspace.path}'"
-          f.puts "ssl_verify_mode #{@config.ssl_mode}"
+          f.puts "chef_repo_path '#{config.workspace_path}'"
+          f.puts "ssl_verify_mode #{config.ssl_mode}"
         end
       end
 
       def write_berks_config
-        return if config.ssl_verify?
+        return if config.payload[:ssl_verify]
         config.berks_config_path.open "w" do |f|
-          # config.ssl_verify?
           f.puts '{"ssl":{"verify":false}}'
         end
       end
@@ -93,7 +93,7 @@ module Drone
       # Command to gather necessary cookbooks
       #
       def berks_install
-        config.berks_files.each do |f|
+        config.payload[:berks_files].each do |f|
           berks_install_for f
         end
       end
@@ -101,7 +101,7 @@ module Drone
       def berks_install_for(f)
         logger.info "Retrieving cookbooks for #{f}"
         cmd = Mixlib::ShellOut
-              .new("berks install -b #{config.workspace.path}/#{f}")
+              .new("berks install -b #{config.workspace_path}/#{f}")
         cmd.run_command
 
         if cmd.error?
@@ -114,7 +114,7 @@ module Drone
       # Command to upload cookbook(s) with Berkshelf
       #
       def berks_upload
-        config.berks_files.each do |f|
+        config.payload[:berks_files].each do |f|
           berks_upload_for f
         end
       end
@@ -122,19 +122,21 @@ module Drone
       def berks_upload_for(f) # rubocop:disable AbcSize
         logger.info "Running berks upload for #{f}"
         command = ["berks upload"]
-        command << cookbook.name unless config.recursive?
-        command << "-b #{@config.workspace.path}/#{f}"
-        command << "--no-freeze" unless config.freeze?
+        command << cookbook.name if cookbook? && !config.payload[:recursive]
+        command << "-b #{config.workspace_path}/#{f}"
+        command << "--no-freeze" unless config.payload[:freeze]
+
         cmd = Mixlib::ShellOut.new(command.join(" "))
         cmd.run_command
 
-        logger.debug "berks upload stdout: #{cmd.stdout}"
+        logger.debug "'#{command.join(" ")}' stdout: #{cmd.stdout}"
         logger.error cmd.stdout + cmd.stderr if cmd.error?
+
         raise "ERROR: Failed to upload cookbook" if cmd.error?
       end
 
       def chef_data?
-        !Dir.glob("#{@config.workspace.path}/{roles,environments,data_bags}")
+        !Dir.glob("#{config.workspace_path}/{roles,environments,data_bags}")
             .empty?
       end
 
@@ -145,21 +147,22 @@ module Drone
         logger.info "Uploading roles, environments and data bags"
         command = ["knife upload"]
         command << "."
-        command << "-c #{@config.knife_config_path}"
+        command << "-c #{config.knife_config_path}"
 
-        Dir.chdir(@config.workspace.path)
+        Dir.chdir(config.workspace_path)
 
         cmd = Mixlib::ShellOut.new(command.join(" "))
         cmd.run_command
 
-        logger.debug "knife upload stdout: #{cmd.stdout}"
+        logger.debug "'#{command.join(" ")}' stdout: #{cmd.stdout}"
+
         raise "ERROR: knife upload failed" if cmd.error?
       end
 
       def cookbook
         @metadata ||= begin
           metadata = ::Chef::Cookbook::Metadata.new
-          metadata.from_file("#{@config.workspace.path}/metadata.rb")
+          metadata.from_file("#{config.workspace_path}/metadata.rb")
           metadata
         end
       end

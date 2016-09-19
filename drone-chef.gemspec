@@ -39,10 +39,11 @@ Gem::Specification.new do |s|
   s.add_development_dependency "pry"
 
   # Keep the versions in sync with the Dockerfile
-  s.add_runtime_dependency "droneio", "~> 1.0"
-  s.add_runtime_dependency "mixlib-shellout", "~> 2.2"
-  s.add_runtime_dependency "chef", "~> 12.7"
+  # s.add_runtime_dependency "droneio", "~> 1.0"
   s.add_runtime_dependency "berkshelf", "~> 4.2"
+  s.add_runtime_dependency "chef", "~> 12.7"
+  s.add_runtime_dependency "gli", "~> 2.14"
+  s.add_runtime_dependency "mixlib-shellout", "~> 2.2"
 
   # Needed until coercible has proper dependencies defined
   s.add_runtime_dependency "bigdecimal", "~> 1.2"

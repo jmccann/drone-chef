@@ -1,41 +1,29 @@
 require "spec_helper"
-require "drone"
 
 describe Drone::Chef::Config do
   include FakeFS::SpecHelpers
 
-  let(:build_data) do
+  let(:valid_pkey) do
+    OpenSSL::PKey::RSA.generate(2048).to_s
+  end
+
+  let(:options) do
     {
-      "workspace" => {
-        "path" => "/path/to/project",
-        "netrc" => {
-          "machine" => "the_machine",
-          "login" => "johndoe",
-          "password" => "test123"
-        }
-      },
-      "vargs" => {
-        "server" => "https://myserver.com",
-        "user" => "jane",
-        "private_key" => "PEMDATAHERE",
-        "ssl_verify" => false,
-        "freeze" => false,
-        "recursive" => false,
-        "berks_files" => ["Berksfile", "Berksfile.another"]
-      }
+      server: "https://myserver.com",
+      org: "test_org",
+      user: "jane",
+      private_key: valid_pkey,
+      ssl_verify: false,
+      freeze: false,
+      recursive: false,
+      berks_files: ["Berksfile", "Berksfile.another"]
     }
   end
 
   let(:file) { double("File") }
 
-  let(:payload) do
-    p = Drone::Plugin.new build_data.to_json
-    p.parse
-    p.result
-  end
-
   let(:config) do
-    Drone::Chef::Config.new payload
+    Drone::Chef::Config.new options
   end
 
   before do
@@ -53,25 +41,26 @@ describe Drone::Chef::Config do
     FakeFS::FileSystem.clear
   end
 
-  describe '#validate!' do
-    it "fails if no vargs are provided" do
-      build_data.delete "vargs"
-      expect { config.validate! }.to raise_error "No plugin data found"
-    end
-
+  describe "#validate!" do
     it "fails if no user provided" do
-      build_data["vargs"].delete "user"
-      expect { config.validate! }.to raise_error "Please provide a username"
+      options.delete :user
+      expect { config.validate! }.to raise_error "Missing 'user'"
     end
 
-    it "fails if no private_key is provided" do
-      build_data["vargs"].delete "private_key"
-      expect { config.validate! }.to raise_error "Please provide a private key"
+    it "fails if no private key is provided" do
+      options.delete :private_key
+      expect { config.validate! }.to raise_error "Missing CHEF_PRIVATE_KEY"
+    end
+
+    it "fails if private key is not a valid format" do
+      reg_check = /Failed to load CHEF_PRIVATE_KEY provided starting with/
+      options[:private_key] = "INVALIDPEMDATA"
+      expect { config.validate! }.to raise_error(reg_check)
     end
 
     it "fails if no server URL is provided" do
-      build_data["vargs"].delete "server"
-      expect { config.validate! }.to raise_error "Please provide a server URL"
+      options.delete :server
+      expect { config.validate! }.to raise_error "Missing 'server'"
     end
 
     it "does not throw an error if validation passes" do
@@ -79,131 +68,51 @@ describe Drone::Chef::Config do
     end
   end
 
-  describe '#configure!' do
-    it "writes .netrc file" do
-      allow(config).to receive(:write_keyfile)
+  describe "#configure!" do
+    # it "writes .netrc file" do
+    #   allow(config).to receive(:write_keyfile)
+    #
+    #   expect(File).to receive(:open).with("/root/.netrc", "w").and_yield(file)
+    #   expect(file).to receive(:puts).with("machine the_machine")
+    #   expect(file).to receive(:puts).with("  login johndoe")
+    #   expect(file).to receive(:puts).with("  password test123")
+    #
+    #   config.configure!
+    # end
 
-      expect(File).to receive(:open).with("/root/.netrc", "w").and_yield(file)
-      expect(file).to receive(:puts).with("machine the_machine")
-      expect(file).to receive(:puts).with("  login johndoe")
-      expect(file).to receive(:puts).with("  password test123")
-
-      config.configure!
-    end
-
-    it "does not write .netrc file on local build" do
-      build_data["workspace"].delete "netrc"
-
-      allow(config).to receive(:write_keyfile)
-
-      expect(File).not_to receive(:open).with("/root/.netrc", "w")
-
-      config.configure!
-    end
+    # it "does not write .netrc file on local build" do
+    #   build_data["workspace"].delete "netrc"
+    #
+    #   allow(config).to receive(:write_keyfile)
+    #
+    #   expect(File).not_to receive(:open).with("/root/.netrc", "w")
+    #
+    #   config.configure!
+    # end
 
     it "writes key file" do
       allow(config).to receive(:write_netrc)
 
       expect(File).to receive(:open).with("/tmp/key.pem", "w").and_yield(file)
-      expect(file).to receive(:write).with("PEMDATAHERE")
+      expect(file).to receive(:write).with(valid_pkey)
 
       config.configure!
     end
   end
 
-  describe '#berks_files' do
-    it "returns default value if none provided" do
-      build_data["vargs"].delete "berks_files"
-      expect(config.berks_files).to eq ["Berksfile"]
-    end
-
-    it "returns user supplied value" do
-      expect(config.berks_files).to eq ["Berksfile", "Berksfile.another"]
-    end
-
-    it "raises error on invalid user data" do
-      build_data["vargs"]["berks_files"] = "Berksfile"
-      expect { config.berks_files }
-        .to raise_error("vargs.berks_files must be Array")
-    end
-
-    it "raises error on missing file" do
-      allow(File).to receive(:exist?).and_call_original
-
-      FakeFS do
-        FileUtils.mkdir_p "/path/to/project"
-        FileUtils.touch "/path/to/project/Berksfile"
-
-        expect { config.berks_files }
-          .to raise_error("Berksfile 'Berksfile.another' does not exist")
-      end
-    end
-  end
-
-  describe '#ssl_mode' do
+  describe "#ssl_mode" do
     it "returns value to disable ssl verify in knife" do
-      build_data["vargs"]["ssl_verify"] = false
+      options[:ssl_verify] = false
       expect(config.ssl_mode).to eq ":verify_none"
     end
 
     it "returns value to enable ssl verify in knife" do
-      build_data["vargs"]["ssl_verify"] = true
+      options[:ssl_verify] = true
       expect(config.ssl_mode).to eq ":verify_peer"
     end
   end
 
-  describe '#ssl_verify?' do
-    it "returns true by default" do
-      build_data["vargs"].delete "ssl_verify"
-      expect(config.ssl_verify?).to eq true
-    end
-
-    it "returns true from user" do
-      build_data["vargs"]["ssl_verify"] = true
-      expect(config.ssl_verify?).to eq true
-    end
-
-    it "returns false from user" do
-      build_data["vargs"]["ssl_verify"] = false
-      expect(config.ssl_verify?).to eq false
-    end
-  end
-
-  describe '#freeze?' do
-    it "returns true by default" do
-      build_data["vargs"].delete "freeze"
-      expect(config.freeze?).to eq true
-    end
-
-    it "returns true from user" do
-      build_data["vargs"]["freeze"] = true
-      expect(config.freeze?).to eq true
-    end
-
-    it "returns false from user" do
-      build_data["vargs"]["freeze"] = false
-      expect(config.freeze?).to eq false
-    end
-  end
-
-  describe '#recursive?' do
-    it "returns true by default" do
-      build_data["vargs"].delete "recursive"
-      expect(config.recursive?).to eq true
-    end
-
-    it "returns true from user" do
-      build_data["vargs"]["recursive"] = true
-      expect(config.recursive?).to eq true
-    end
-
-    it "returns false from user" do
-      build_data["vargs"]["recursive"] = false
-      expect(config.recursive?).to eq false
-    end
-  end
-
-  describe '#knife_config_path' do
+  describe "#knife_config_path" do
     it "returns the file path" do
       FakeFS do
         expect(config.knife_config_path.to_s).to eq "/root/.chef/knife.rb"
@@ -224,7 +133,7 @@ describe Drone::Chef::Config do
     end
   end
 
-  describe '#berks_config_path' do
+  describe "#berks_config_path" do
     it "returns the file path" do
       FakeFS do
         expect(config.berks_config_path.to_s)
@@ -243,70 +152,6 @@ describe Drone::Chef::Config do
         # Test that it exists now
         expect(Dir.exist?("/root/.berkshelf")).to eq true
       end
-    end
-  end
-
-  describe '#debug?' do
-    subject { config.debug? }
-
-    before do
-      ENV["DEBUG"] = nil
-    end
-
-    context "environment is true and build is true" do
-      before do
-        ENV["DEBUG"] = "true"
-        build_data["vargs"]["debug"] = true
-      end
-
-      it { is_expected.to eq true }
-    end
-
-    context "environment is false and build is false" do
-      before do
-        ENV["DEBUG"] = "false"
-        build_data["vargs"]["debug"] = false
-      end
-
-      it { is_expected.to eq false }
-    end
-
-    context "environment is true and build is false" do
-      before do
-        ENV["DEBUG"] = "true"
-        build_data["vargs"]["debug"] = false
-      end
-
-      it { is_expected.to eq true }
-    end
-
-    context "environment is false and build is true" do
-      before do
-        ENV["DEBUG"] = "false"
-        build_data["vargs"]["debug"] = true
-      end
-
-      it { is_expected.to eq true }
-    end
-
-    context "environment is nil and build is nil" do
-      it { is_expected.to eq false }
-    end
-
-    context "environment is nil and build is true" do
-      before do
-        build_data["vargs"]["debug"] = true
-      end
-
-      it { is_expected.to eq true }
-    end
-
-    context "environment is nil and build is false" do
-      before do
-        build_data["vargs"]["debug"] = false
-      end
-
-      it { is_expected.to eq false }
     end
   end
 end

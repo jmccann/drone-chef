@@ -11,8 +11,8 @@ RUN apk update && \
     libffi-dev \
     bash && \
   gem install --no-ri --no-rdoc \
-    droneio \
-    --version '~> 1.0' && \
+    gli \
+    --version '~> 2.14' && \
   gem install --no-ri --no-rdoc \
     mixlib-shellout \
     --version '~> 2.2' && \
@@ -39,4 +39,4 @@ COPY pkg/drone-chef-0.0.0.gem /tmp/
 RUN gem install --no-ri --no-rdoc --local \
   /tmp/drone-chef-0.0.0.gem
 
-ENTRYPOINT ["/usr/bin/drone-chef"]
+ENTRYPOINT ["/usr/bin/drone-chef", "upload"]

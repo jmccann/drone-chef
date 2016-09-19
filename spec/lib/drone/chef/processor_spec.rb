@@ -1,33 +1,21 @@
 require "spec_helper"
-require "drone"
 
 describe Drone::Chef::Processor do
-  let(:build_data) do
-    {
-      "workspace" => {
-        "path" => "/path/to/project",
-        "netrc" => {
-          "machine" => "the_machine",
-          "login" => "johndoe",
-          "password" => "test123"
-        }
-      },
-      "vargs" => {
-        "server" => "https://myserver.com",
-        "user" => "johndoe",
-        "private_key" => "PEMDATAHERE",
-        "ssl_verify" => false,
-        "org" => "my_chef_org",
-        "recursive" => false,
-        "freeze" => false
-      }
-    }
+  let(:valid_pkey) do
+    OpenSSL::PKey::RSA.generate(2048).to_s
   end
 
-  let(:payload) do
-    p = Drone::Plugin.new build_data.to_json
-    p.parse
-    p.result
+  let(:options) do
+    {
+      server: "https://myserver.com",
+      org: "my_chef_org",
+      user: "johndoe",
+      private_key: valid_pkey,
+      ssl_verify: false,
+      freeze: false,
+      recursive: false,
+      berks_files: ["Berksfile"]
+    }
   end
 
   let(:stringio) do
@@ -39,8 +27,9 @@ describe Drone::Chef::Processor do
   end
 
   let(:config) do
-    c = Drone::Chef::Config.new payload, logger
+    c = Drone::Chef::Config.new options, logger
     allow(c).to receive(:home).and_return "/root"
+    allow(c).to receive(:workspace_path).and_return "/path/to/project"
     c
   end
 
@@ -69,19 +58,7 @@ describe Drone::Chef::Processor do
                                                 from_file: nil)
   end
 
-  describe '#validate!' do
-    it "passes when org is provided" do
-      expect { processor.validate! }.not_to raise_error
-    end
-
-    it "fails when org is not provided" do
-      build_data["vargs"]["org"] = nil
-      expect { processor.validate! }
-        .to raise_error("Please provide an organization")
-    end
-  end
-
-  describe '#configure!' do
+  describe "#configure!" do
     include FakeFS::SpecHelpers
 
     before do
@@ -103,7 +80,7 @@ describe Drone::Chef::Processor do
       end
     end
 
-    describe '#berksfile?' do
+    describe "#berksfile?" do
       it "returns true if Berksfile exists" do
         FakeFS do
           FileUtils.mkdir_p "/path/to/project"
@@ -179,7 +156,7 @@ describe Drone::Chef::Processor do
     end
   end
 
-  describe '#upload!' do
+  describe "#upload!" do
     include FakeFS::SpecHelpers
 
     let(:cookbook) do
@@ -190,8 +167,8 @@ describe Drone::Chef::Processor do
 
     before do
       # Set normal defaults
-      build_data["vargs"].delete "freeze"
-      build_data["vargs"].delete "recursive"
+      options[:freeze] = true
+      options[:recursive] = true
 
       allow(Chef::Cookbook::Metadata).to receive(:new).and_return cookbook
 
@@ -232,11 +209,12 @@ describe Drone::Chef::Processor do
     end
 
     it "uploads a cookbook to chef server" do
-      build_data["vargs"]["recursive"] = false
+      options[:recursive] = false
 
       FakeFS do
         FileUtils.mkdir_p "/path/to/project"
         FileUtils.touch "/path/to/project/Berksfile"
+        FileUtils.touch "/path/to/project/metadata.rb"
 
         expect(Mixlib::ShellOut)
           .to receive(:new)
@@ -249,7 +227,7 @@ describe Drone::Chef::Processor do
     end
 
     it "does not freeze cookbooks uploaded to chef server" do
-      build_data["vargs"]["freeze"] = false
+      options[:freeze] = false
 
       FakeFS do
         FileUtils.mkdir_p "/path/to/project"
