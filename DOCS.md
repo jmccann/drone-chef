@@ -1,9 +1,7 @@
-
 Global Parameters
 =================
 The following are global parameters used for configuration this plugin:
 * **user** - connects as this user
-* **private_key** - connects with this private key
 * **server** - Chef server to connect to
 * **berks_files** - (default: `['Berksfile']`) List of Berksfiles to use
 * **ssl_verify** - (default: `true`) Enable/Disable SSL verify
@@ -11,94 +9,34 @@ The following are global parameters used for configuration this plugin:
 * **freeze** - (default: `true`) Wether or not to freeze the version
 * **recursive** - (default: `true`) Enable/Disable ability to upload all dependency cookbooks as well
 
-Example
-=======
+### Secrets
+The following secret values can be set to configure the plugin.
 
-### Minimal Definition
-This will upload the cookbook to a supermarket server
-```yaml
-deploy:
-  chef:
-    image: jmccann/drone-chef
-    user: userid
-    private_key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
-    server: https://mysupermarket.com
+* **CHEF_PRIVATE_KEY** - The private key of the **user** to authenticate with
+
+It is highly recommended to put the **CHEF_PRIVATE_KEY** into secrets so it is not exposed to users. This can be done using the [drone-cli](http://readme.drone.io/0.5/reference/cli/overview/).
+
+```
+drone secret add --image=jmccann/drone-chef:0.5 \
+  octocat/hello-world CHEF_PRIVATE_KEY @/path/to/keyfile
 ```
 
-### Chef Server Definition
-```yaml
-deploy:
-  chef:
-    image: jmccann/drone-chef
-    user: userid
-    private_key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
-    server: https://chefserver.com
-    type: server
-    org: my_org
-    freeze: true
-    ssl_verify: false
+Then sign and commit the YAML file after all secrets are added.
+
+```
+drone sign octocat/hello-world
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Drone plugin for deploying cookbooks to a Chef Server or Supermarket.
-
-Global Parameters
-=================
-The following are global parameters used for configuration this plugin:
-* **user** - connects as this user
-* **private_key** - connects with this private key
-* **server** - Chef server to connect to
-* **type** - (default: `'supermarket'`) Type of server to upload to. Valid values: `'supermarket'`, `'server'`
-* **ssl_verify** - (default: `true`) Enable/Disable SSL verify
-
-Chef Server Specific Parameters
-===============================
-The following are parameters used for configuration this plugin when uploading to a Chef Server:
-* **org** - Chef org to use on the Chef server
-* **freeze** - (default: `true`) Wether or not to freeze the version
-* **recursive** - (default: `true`) Enable/Disable ability to upload all dependency cookbooks as well
+See [secrets](http://readme.drone.io/0.5/usage/secrets/) for additional information on secrets.
 
 Example
 =======
-
-### Minimal Definition
-This will upload the cookbook to a supermarket server
+### Minimal Chef Server Definition
 ```yaml
 deploy:
   chef:
-    image: jmccann/drone-chef
+    image: jmccann/drone-chef:0.5
     user: userid
-    private_key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
-    server: https://mysupermarket.com
-```
-
-### Chef Server Definition
-```yaml
-deploy:
-  chef:
-    image: jmccann/drone-chef
-    user: userid
-    private_key: "-----BEGIN RSA PRIVATE KEY-----\nMIIasdf...\n-----END RSA PRIVATE KEY-----"
     server: https://chefserver.com
-    type: server
     org: my_org
-    freeze: true
-    ssl_verify: false
 ```
