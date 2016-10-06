@@ -1,8 +1,7 @@
 # drone-chef
 
-[![Build Status](http://beta.drone.io/api/badges/drone-plugins/drone-chef/status.svg)](http://beta.drone.io/drone-plugins/drone-chef)
-[![Coverage Status](https://aircover.co/badges/drone-plugins/drone-chef/coverage.svg)](https://aircover.co/drone-plugins/drone-chef)
-[![](https://badge.imagelayers.io/plugins/drone-chef:latest.svg)](https://imagelayers.io/?images=plugins/drone-chef:latest 'Get your own badge on imagelayers.io')
+[![Build Status](http://beta.drone.io/api/badges/jmccann/drone-chef/status.svg)](http://beta.drone.io/jmccann/drone-chef)
+[![](https://badge.imagelayers.io/jmccann/drone-chef:latest.svg)](https://imagelayers.io/?images=jmccann/drone-chef:latest 'Get your own badge on imagelayers.io')
 
 Drone plugin to publish cookbooks to Chef Server. For the usage information and a listing of the available options please take a look at [the docs](DOCS.md).
 
