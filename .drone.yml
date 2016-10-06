@@ -7,19 +7,20 @@ pipeline:
 
       - bundle install --path=gems --retry=5 --jobs=5
       - bin/rake
-  docker:
-    storage_driver: overlay
-    repo: plugins/drone-chef
-    tags: [ "latest" ]
-    when:
-      branch: master
-      event: push
 
-plugin:
-  name: Chef
-  desc: Publish files and artifacts to Chef Server
-  type: publish
-  image: plugins/drone-chef
-  labels:
-    - chef
-    - ruby
+#   docker:
+#     storage_driver: overlay
+#     repo: plugins/drone-chef
+#     tags: [ "latest" ]
+#     when:
+#       branch: master
+#       event: push
+#
+# plugin:
+#   name: Chef
+#   desc: Publish files and artifacts to Chef Server
+#   type: publish
+#   image: plugins/drone-chef
+#   labels:
+#     - chef
+#     - ruby
