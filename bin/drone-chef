@@ -19,6 +19,7 @@ end
 include GLI::App
 
 def load_env(options, key)
+  # rubocop:disable GuardClause
   if options[key.downcase.to_sym].nil? && !ENV["PLUGIN_#{key.upcase}"].nil?
     options[key.downcase.to_sym] = ENV["PLUGIN_#{key.upcase}"]
   end
@@ -56,7 +57,7 @@ command :upload do |c|
   c.switch [:d, :debug]
 
   c.action do |_global_options, options, _args|
-    %w(private_key).each do |k|
+    %w(user private_key).each do |k|
       load_secrets options, k
     end
     %w(user server ssl_verify org freeze
