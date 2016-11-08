@@ -2,6 +2,7 @@
 
 require "csv"
 require "gli"
+require "yaml"
 
 $LOAD_PATH.push File.expand_path("../../lib", __FILE__)
 
@@ -20,14 +21,13 @@ include GLI::App
 
 def load_env(options, key)
   # rubocop:disable GuardClause
-  if options[key.downcase.to_sym].nil? && !ENV["PLUGIN_#{key.upcase}"].nil?
-    options[key.downcase.to_sym] = ENV["PLUGIN_#{key.upcase}"]
+  unless ENV["PLUGIN_#{key.upcase}"].nil?
+    options[key.downcase.to_sym] = YAML.load(ENV["PLUGIN_#{key.upcase}"])
   end
 end
 
 def load_secrets(options, key)
-  if options[key.downcase.to_sym].nil? &&
-     !ENV["CHEF_#{key.upcase}"].nil?
+  unless ENV["CHEF_#{key.upcase}"].nil?
     options[key.downcase.to_sym] = ENV["CHEF_#{key.upcase}"]
   end
 end
@@ -44,33 +44,31 @@ command :upload do |c| # rubocop:disable BlockLength
   c.desc "The Chef server to upload to"
   c.flag [:s, :server]
   c.desc "To SSL or not to SSL"
-  c.switch [:v, :ssl_verify]
+  c.switch [:v, :ssl_verify], default_value: true
   c.desc "The Chef Organization to upload to"
   c.flag [:o, :org]
   c.desc "Comma delimited list of Berksfiles to use"
   c.flag [:b, :berks_files]
   c.desc "Wether or not to freeze the cookbook versions"
-  c.switch [:f, :freeze]
+  c.switch [:f, :freeze], default_value: true
   c.desc "Enable/Disable ability to upload all dependency cookbooks as well"
-  c.switch [:r, :recursive]
+  c.switch [:r, :recursive], default_value: true
   c.desc "Debug log output"
-  c.switch [:d, :debug]
+  c.switch [:d, :debug], default_value: false
 
   c.action do |_global_options, options, _args|
+    # Load secrets
     %w(user private_key).each do |k|
       load_secrets options, k
     end
+
+    # ENV options take precedence
     %w(user server ssl_verify org freeze
        recursive debug private_key berks_files).each do |k|
       load_env options, k
     end
 
-    # Defaults
-    options[:ssl_verify] = true if options[:ssl_verify].nil?
-    options[:freeze] = true if options[:freeze].nil?
-    options[:recursive] = true if options[:recursive].nil?
-    options[:debug] = false if options[:debug].nil?
-
+    # Massage berks_files
     unless options[:berks_files].nil?
       options[:berks_files] = CSV.parse(options[:berks_files]).first
     end
