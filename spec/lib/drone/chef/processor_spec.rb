@@ -321,6 +321,24 @@ describe Drone::Chef::Processor do
       FakeFS::FileSystem.clear
     end
 
+    it "logs cookbook upload command output" do
+      allow(processor).to receive(:berksfile?).and_return true
+
+      processor.upload!
+
+      expect(stringio.string).to match(/berks_upload_stdout/)
+    end
+
+    it "logs knife org upload command output" do
+      FakeFS do
+        FileUtils.mkdir_p "/path/to/project/roles"
+
+        processor.upload!
+
+        expect(stringio.string).to match(/knife_upload_stdout/)
+      end
+    end
+
     it "logs failure of retrieving cookbooks" do
       allow(processor).to receive(:berksfile?).and_return true
       allow(berks_install_shellout).to receive(:error?).and_return true
