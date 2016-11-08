@@ -10,9 +10,14 @@ RUN apk update && \
     ca-certificates \
     git \
     ruby && \
+  gem install --no-ri --no-rdoc \
+    bundler --version '~> 1.13' && \
   rm -rf /var/cache/apk/*
 
 # Install gems
+RUN echo 'gem: --no-rdoc --no-ri' > ~/.gemrc
+COPY drone-chef.gemspec drone-chef.gemspec
+COPY Gemfile Gemfile
 RUN apk update && \
   apk add \
     ruby-dev \
@@ -20,22 +25,10 @@ RUN apk update && \
     perl \
     libffi-dev \
     bash && \
+  # Required for bundler
   gem install --no-ri --no-rdoc \
-    gli \
-    --version '~> 2.14' && \
-  gem install --no-ri --no-rdoc \
-    mixlib-shellout \
-    --version '~> 2.2' && \
-  gem install --no-ri --no-rdoc \
-    chef \
-    --version '~> 12.15' && \
-  # io-console needed for berkshelf
-  gem install --no-ri --no-rdoc \
-    io-console \
-    --version '~> 0.4' && \
-  gem install --no-ri --no-rdoc \
-    berkshelf \
-    --version '~> 5.2' && \
+    io-console --version '~> 0.4' && \
+  bundle install --without development test && \
   apk del \
     ruby-dev \
     build-base \
@@ -44,8 +37,8 @@ RUN apk update && \
     perl && \
   rm -rf /var/cache/apk/*
 
+# Install plugin
 COPY pkg/drone-chef-0.0.0.gem /tmp/
-
 RUN gem install --no-ri --no-rdoc --local \
   /tmp/drone-chef-0.0.0.gem
 
