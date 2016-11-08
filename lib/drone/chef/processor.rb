@@ -117,7 +117,7 @@ module Drone
         end
       end
 
-      def berks_upload_for(f) # rubocop:disable AbcSize
+      def berks_upload_for(f) # rubocop:disable AbcSize, MethodLength
         logger.info "Running berks upload for #{f}"
         command = ["berks upload"]
         command << cookbook.name if cookbook? && !config.payload[:recursive]
@@ -127,8 +127,9 @@ module Drone
         cmd = Mixlib::ShellOut.new(command.join(" "))
         cmd.run_command
 
-        logger.debug "'#{command.join(" ")}' stdout: #{cmd.stdout}"
-        logger.error cmd.stdout + cmd.stderr if cmd.error?
+        logger.debug "berks_upload_for(#{f}) cmd: #{command.join(" ")}"
+        logger.error cmd.stderr if cmd.error?
+        logger.info "\n#{cmd.stdout}"
 
         raise "ERROR: Failed to upload cookbook" if cmd.error?
       end
@@ -152,7 +153,8 @@ module Drone
         cmd = Mixlib::ShellOut.new(command.join(" "))
         cmd.run_command
 
-        logger.debug "'#{command.join(" ")}' stdout: #{cmd.stdout}"
+        logger.debug "knife_upload cmd: #{command.join(" ")}"
+        logger.info "\n#{cmd.stdout}"
 
         raise "ERROR: knife upload failed" if cmd.error?
       end
