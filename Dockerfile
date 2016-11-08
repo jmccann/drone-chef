@@ -2,13 +2,19 @@
 #
 #     docker build --rm=true -t jmccann/drone-chef .
 
-FROM alpine:3.3
+FROM alpine:3.4
 
+# Install required packages
 RUN apk update && \
   apk add \
     ca-certificates \
     git \
-    ruby \
+    ruby && \
+  rm -rf /var/cache/apk/*
+
+# Install gems
+RUN apk update && \
+  apk add \
     ruby-dev \
     build-base \
     perl \
@@ -22,17 +28,17 @@ RUN apk update && \
     --version '~> 2.2' && \
   gem install --no-ri --no-rdoc \
     chef \
-    --version '~> 12.7' && \
+    --version '~> 12.15' && \
+  # io-console needed for berkshelf
   gem install --no-ri --no-rdoc \
     io-console \
     --version '~> 0.4' && \
   gem install --no-ri --no-rdoc \
     berkshelf \
-    --version '~> 4.2' && \
-  gem install --no-ri --no-rdoc \
-    bigdecimal \
-    --version '~> 1.2' && \
+    --version '~> 5.2' && \
   apk del \
+    ruby-dev \
+    build-base \
     bash \
     libffi-dev \
     perl && \
