@@ -61,7 +61,7 @@ command :upload do |c|
       load_secrets options, k
     end
     %w(user server ssl_verify org freeze
-       recursive debug private_key).each do |k|
+       recursive debug private_key berks_files).each do |k|
       load_env options, k
     end
 
