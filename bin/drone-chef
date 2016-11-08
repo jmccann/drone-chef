@@ -36,7 +36,7 @@ program_desc "Drone Chef Plugin"
 
 desc "Upload cookbook"
 
-command :upload do |c|
+command :upload do |c| # rubocop:disable BlockLength
   c.desc "The user to upload with"
   c.flag [:u, :user]
   c.desc "The user's private key"

@@ -16,9 +16,7 @@ module Drone
       def initialize(config)
         self.config = config
 
-        yield(
-          self
-        ) if block_given?
+        yield(self) if block_given?
       end
 
       #

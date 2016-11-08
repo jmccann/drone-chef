@@ -2,6 +2,7 @@ AllCops:
   Exclude:
     - gems/**/*
     - test/chef_cookbook/**/*
+    - drone-chef.gemspec
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes
