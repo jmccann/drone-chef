@@ -1,3 +1,7 @@
+# Docker image for the drone-chef plugin
+#
+#     docker build --rm=true -t jmccann/drone-chef .
+
 FROM alpine:3.3
 
 RUN apk update && \
