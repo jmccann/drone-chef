@@ -33,7 +33,7 @@ Example
 =======
 ### Minimal Chef Server Definition
 ```yaml
-deploy:
+pipeline:
   chef:
     image: jmccann/drone-chef:0.5
     user: userid
