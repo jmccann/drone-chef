@@ -38,7 +38,7 @@ RUN apk update && \
   rm -rf /var/cache/apk/*
 
 # Install plugin
-COPY pkg/drone-chef-0.0.0.gem /tmp/
+COPY drone-chef-0.0.0.gem /tmp/
 RUN gem install --no-ri --no-rdoc --local \
   /tmp/drone-chef-0.0.0.gem
 
