@@ -4,6 +4,14 @@ AllCops:
     - test/chef_cookbook/**/*
     - drone-chef.gemspec
 
+Metrics/BlockLength:
+  Exclude:
+    - "**/*_spec.rb"
+
+Metrics/ModuleLength:
+  Exclude:
+    - "**/*_spec.rb"
+
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 
