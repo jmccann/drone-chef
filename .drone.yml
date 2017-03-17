@@ -4,7 +4,7 @@ pipeline:
     commands:
       - bundle install --path=gems --retry=5 --jobs=5
       - bundle exec rubocop
-      - bundle exec rpsec
+      - bundle exec rspec
       - gem build drone-chef.gemspec
 
 #   docker:
