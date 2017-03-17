@@ -1,12 +1,11 @@
 pipeline:
   test:
-    image: ruby:2.3-alpine
+    image: ruby:2.4
     commands:
-      - apk update
-      - apk add build-base
-
       - bundle install --path=gems --retry=5 --jobs=5
-      - bin/rake
+      - bundle exec rubocop
+      - bundle exec rpsec
+      - gem build drone-chef.gemspec
 
 #   docker:
 #     storage_driver: overlay

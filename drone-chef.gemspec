@@ -31,11 +31,11 @@ Gem::Specification.new do |s|
   s.add_development_dependency "bundler"
   s.add_development_dependency "rake"
   s.add_development_dependency "yard"
-  s.add_development_dependency "rspec"
+  s.add_development_dependency "rspec", "~> 3.5"
   s.add_development_dependency "fakefs"
   s.add_development_dependency "simplecov"
   s.add_development_dependency "simplecov-lcov"
-  s.add_development_dependency "rubocop"
+  s.add_development_dependency "rubocop", "0.47.1"
   s.add_development_dependency "pry"
 
   # Keep the versions in sync with the Dockerfile
