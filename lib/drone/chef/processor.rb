@@ -38,12 +38,12 @@ module Drone
       end
 
       #
-      # Upload the cookbook to a Chef Server
+      # Upload the cookbook and envs/roles/etc to a Chef Server
       #
       def upload!
         berks_install if berksfile?
         berks_upload if berksfile?
-        knife_upload unless cookbook? || !chef_data?
+        knife_upload if chef_data?
       end
 
       #

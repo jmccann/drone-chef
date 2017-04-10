@@ -243,15 +243,6 @@ describe Drone::Chef::Processor do
       end
     end
 
-    it "does not upload chef org data from cookbooks" do
-      allow(processor).to receive(:cookbook?).and_return(true)
-      allow(processor).to receive(:chef_data?).and_return(true)
-
-      expect(Mixlib::ShellOut)
-        .not_to receive(:new).with(/knife upload/)
-      processor.upload!
-    end
-
     context "if not a cookbook" do
       before do
         allow(processor).to receive(:cookbook?).and_return(false)
