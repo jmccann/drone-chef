@@ -22,7 +22,7 @@ include GLI::App
 def load_env(options, key)
   # rubocop:disable GuardClause
   unless ENV["PLUGIN_#{key.upcase}"].nil?
-    options[key.downcase.to_sym] = YAML.safe_load(ENV["PLUGIN_#{key.upcase}"])
+    options[key.downcase.to_sym] = ENV["PLUGIN_#{key.upcase}"]
   end
 end
 
