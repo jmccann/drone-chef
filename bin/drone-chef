@@ -22,13 +22,27 @@ include GLI::App
 def load_env(options, key)
   # rubocop:disable GuardClause
   unless ENV["PLUGIN_#{key.upcase}"].nil?
-    options[key.downcase.to_sym] = ENV["PLUGIN_#{key.upcase}"]
+    case ENV["PLUGIN_#{key.upcase}"]
+    when "true"
+      options[key.downcase.to_sym] = true
+    when "false"
+      options[key.downcase.to_sym] = false
+    else
+      options[key.downcase.to_sym] = ENV["PLUGIN_#{key.upcase}"]
+    end
   end
 end
 
 def load_secrets(options, key)
   unless ENV["CHEF_#{key.upcase}"].nil?
-    options[key.downcase.to_sym] = ENV["CHEF_#{key.upcase}"]
+    case ENV["CHEF_#{key.upcase}"]
+    when "true"
+      options[key.downcase.to_sym] = true
+    when "false"
+      options[key.downcase.to_sym] = false
+    else
+      options[key.downcase.to_sym] = ENV["CHEF_#{key.upcase}"]
+    end
   end
 end
 
