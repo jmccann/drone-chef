@@ -140,7 +140,7 @@ module Drone
       #
       # Upload any roles, environments and data_bags
       #
-      def knife_upload # rubocop:disable AbcSize
+      def knife_upload # rubocop:disable AbcSize, MethodLength
         logger.info "Uploading roles, environments and data bags"
         command = ["knife upload"]
         command << "."
@@ -154,6 +154,7 @@ module Drone
         logger.debug "knife_upload cmd: #{command.join(" ")}"
         logger.info "\n#{cmd.stdout}"
 
+        logger.error cmd.stdout + cmd.stderr if cmd.error?
         raise "ERROR: knife upload failed" if cmd.error?
       end
 
