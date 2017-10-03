@@ -24,7 +24,6 @@ module Drone
       #
       def validate!
         config.validate!
-        # raise "Please provide an organization" if config.payloadorg.nil?
       end
 
       #

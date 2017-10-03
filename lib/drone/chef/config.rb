@@ -30,7 +30,7 @@ module Drone
       #
       def configure!
         write_keyfile
-        # write_netrc
+        write_netrc
       end
 
       #
@@ -151,11 +151,11 @@ module Drone
       # Write a .netrc file
       #
       def write_netrc
-        return if netrc.nil?
+        return if ENV["DRONE_NETRC_MACHINE"].nil? || File.exist?(netrc_path)
         netrc_path.open "w" do |f|
-          f.puts "machine #{netrc.machine}"
-          f.puts "  login #{netrc.login}"
-          f.puts "  password #{netrc.password}"
+          f.puts "machine #{ENV["DRONE_NETRC_MACHINE"]}"
+          f.puts "  login #{ENV["DRONE_NETRC_USERNAME"]}"
+          f.puts "  password #{ENV["DRONE_NETRC_PASSWORD"]}"
         end
       end
 
